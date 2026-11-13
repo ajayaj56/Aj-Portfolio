@@ -5,7 +5,7 @@ import gsap from "gsap";
 
 const props = defineProps<{
   copy: string;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   animated?: boolean;
 }>();
 
@@ -100,6 +100,14 @@ watchEffect((onInvalidate) => {
         padding: var(--space-xs) var(--space-sm);
       }
     }
+
+    &-lg {
+      padding: var(--space-xxs) var(--space-sm);
+
+      @include mixins.mq("lg") {
+        padding: var(--space-xs) var(--space-md);
+      }
+    }
   }
 
   &-copy {
@@ -126,6 +134,18 @@ watchEffect((onInvalidate) => {
 
         @include mixins.mq("xl") {
           font-size: var(--font-size-title-sm);
+        }
+      }
+
+      &-lg {
+        font-size: var(--font-size-title-xs);
+
+        @include mixins.mq("lg") {
+          font-size: var(--font-size-title-sm);
+        }
+
+        @include mixins.mq("xl") {
+          font-size: var(--font-size-title-md);
         }
       }
     }

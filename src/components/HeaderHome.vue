@@ -7,28 +7,36 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useHeaderTheme } from "../composables/useHeaderTheme";
 import { projectId } from "../composables/useRouteObserver";
 
-const handleLinkClick = (link: string) => {
-  if (!lenis.value) return;
-  lenis.value.scrollTo(link);
-};
-
-type ActiveLink = "about" | "projects" | "contact";
-const activeLink = ref<ActiveLink | null>(null);
-const sections: ActiveLink[] = ["about", "projects", "contact"];
-const ariaLabels = {
+type ActiveLink = "home" | "about" | "projects" | "contact";
+const activeLink = ref<ActiveLink | null>("home");
+const sections: ActiveLink[] = ["home", "about", "projects", "contact"];
+const ariaLabels: Record<ActiveLink, string> = {
+  home: t("home"),
   about: t("about"),
   projects: t("projects"),
   contact: t("contact"),
 };
 
+const handleLinkClick = (section: ActiveLink) => {
+  activeLink.value = section;
+  updateBarPosition();
+  if (!lenis.value) return;
+  if (section === "home") {
+    lenis.value.scrollTo(0);
+  } else {
+    lenis.value.scrollTo("#" + section);
+  }
+};
+
 const isMounted = ref(false);
 
 const barStyle = ref({ transform: "" });
-const ITEM_WIDTH = 128;
+const ITEM_WIDTH = 120;
 
-const { isDarkTheme, hasScrolledIntoView } = useHeaderTheme();
+const { isDarkTheme } = useHeaderTheme();
 
 const updateBarPosition = () => {
+  if (!activeLink.value) return;
   const index = sections.indexOf(activeLink.value as ActiveLink);
   const left = index * ITEM_WIDTH;
   barStyle.value = {
@@ -37,11 +45,28 @@ const updateBarPosition = () => {
 };
 
 onMounted(() => {
-  sections.forEach((section) => {
+  // Hero section
+  ScrollTrigger.create({
+    trigger: "#hero",
+    start: "top top",
+    endTrigger: "#about",
+    end: "top 22.5%",
+    onEnter: () => {
+      activeLink.value = "home";
+      updateBarPosition();
+    },
+    onEnterBack: () => {
+      activeLink.value = "home";
+      updateBarPosition();
+    },
+  });
+
+  // Other sections
+  (["about", "projects", "contact"] as const).forEach((section) => {
     ScrollTrigger.create({
       trigger: `#${section}`,
       start: section === "about" ? "top 22.5%" : "top center",
-      end: "bottom center",
+      end: section === "contact" ? "bottom bottom" : "bottom center",
       onEnter: () => {
         activeLink.value = section;
         updateBarPosition();
@@ -50,11 +75,10 @@ onMounted(() => {
         activeLink.value = section;
         updateBarPosition();
       },
-      onLeave: () => (activeLink.value = null),
-      onLeaveBack: () => (activeLink.value = null),
     });
   });
 
+  updateBarPosition();
   ScrollTrigger.refresh();
 
   isMounted.value = true;
@@ -67,7 +91,7 @@ onMounted(() => {
       <div
         :class="[
           'header-home-bar',
-          { 'header-home-bar-active': activeLink !== null && hasScrolledIntoView, 'header-home-bar-dark': isDarkTheme },
+          { 'header-home-bar-active': activeLink !== null, 'header-home-bar-dark': isDarkTheme },
         ]"
         :style="barStyle"
       ></div>
@@ -77,10 +101,10 @@ onMounted(() => {
         :is-active="activeLink === section"
         :class="[
           'header-home-link',
-          { 'header-home-link-active': activeLink === section && hasScrolledIntoView },
+          { 'header-home-link-active': activeLink === section },
           'children-unclickable',
         ]"
-        @click="handleLinkClick('#' + section)"
+        @click="handleLinkClick(section)"
         :is-dark-theme="isDarkTheme"
         :aria-label="ariaLabels[section]"
         data-sound="click"
@@ -142,7 +166,7 @@ onMounted(() => {
     top: 3px;
     left: 3px;
     height: calc(100% - 6px);
-    width: 128px;
+    width: 120px;
     background: var(--color-orange-400);
     border-radius: 100px;
     transition:
@@ -170,7 +194,7 @@ onMounted(() => {
     background: none;
     transition: color 0.1s ease-in-out;
     font-size: var(--font-size-md);
-    width: 128px;
+    width: 120px;
     white-space: nowrap;
     text-transform: uppercase;
 

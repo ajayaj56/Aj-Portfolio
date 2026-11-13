@@ -17,12 +17,12 @@ export const useMusic = () => {
   const tickVolumes = () => {
     // If not on home route, always use base volume
     if (path.value !== "/") {
-      musicTracks.luci.volume(BASE_VOLUMES.luci);
+      musicTracks.bgm.volume(BASE_VOLUMES.bgm);
       musicTracks.about.volume(0);
       return;
     }
 
-    musicTracks.luci.volume(clamp(1 - sceneWeights.about, 0, 1) * BASE_VOLUMES.luci);
+    musicTracks.bgm.volume(clamp(1 - sceneWeights.about, 0, 1) * BASE_VOLUMES.bgm);
     musicTracks.about.volume(clamp(sceneWeights.about * 1.25 - 0.25, 0, 1) * BASE_VOLUMES.about);
   };
 
@@ -44,7 +44,7 @@ export const useMusic = () => {
     if (!isFeatureEnabled("sounds")) return;
     if (!howlerUnlocked.value || !soundsEnabled.value || isTouch.value) return;
 
-    play("luci");
+    play("bgm");
     play("about");
   });
 
@@ -56,7 +56,7 @@ export const useMusic = () => {
   onUnmounted(() => {
     if (!isFeatureEnabled("sounds")) return;
     gsap.ticker.remove(tick);
-    musicTracks.luci.stop();
+    musicTracks.bgm.stop();
     musicTracks.about.stop();
   });
 };

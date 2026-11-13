@@ -11,8 +11,8 @@ import AppearingText from "../../../components/AppearingText.vue";
     <div class="hero-content grid">
       <div class="hero-content-inner" id="hero-content-inner">
         <div class="hero-content-copys">
-          <h1 class="hero-title">David<br />Heckhoff</h1>
-          <Banner class="hero-banner" :copy="t('job-title')" v-if="!preloaderVisible" animated />
+          <h1 class="hero-title">Ajay<br />Guvva</h1>
+          <Banner class="hero-banner" size="lg" :copy="t('job-title')" v-if="!preloaderVisible" animated />
         </div>
       </div>
     </div>
@@ -84,19 +84,30 @@ import AppearingText from "../../../components/AppearingText.vue";
   &-title {
     font-weight: 900;
     letter-spacing: 0.02em;
-    font-size: var(--font-size-title-lg);
+    line-height: 1.05;
+    font-size: clamp(56px, 8vw, var(--font-size-title-xl));
 
-    @include mixins.landscape {
-      font-size: var(--font-size-title-lg);
+    @include mixins.mq("sm") {
+      font-size: var(--font-size-title-xxl);
     }
 
-    @include mixins.landscape-large {
-      @include mixins.mq("sm") {
-        font-size: var(--font-size-title-xl);
+    @include mixins.mq("md") {
+      font-size: var(--font-size-title-xxxl);
+    }
+
+    @include mixins.landscape {
+      font-size: var(--font-size-title-xl);
+
+      @include mixins.mq("md") {
+        font-size: var(--font-size-title-xxl);
+      }
+
+      @include mixins.mq("lg") {
+        font-size: var(--font-size-title-xxxl);
       }
 
       @include mixins.mq("xl") {
-        font-size: var(--font-size-title-xxl);
+        font-size: clamp(112px, 8vw, 136px);
       }
     }
   }
@@ -114,8 +125,13 @@ import AppearingText from "../../../components/AppearingText.vue";
     }
 
     @include mixins.mq("lg") {
-      right: -32px;
-      transform: rotate(-5deg) translate(0, 80%);
+      right: -36px;
+      transform: rotate(-5deg) translate(0, 78%);
+    }
+
+    @include mixins.mq("xl") {
+      right: -48px;
+      transform: rotate(-5deg) translate(0, 82%);
     }
   }
 }

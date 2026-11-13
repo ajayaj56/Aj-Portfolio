@@ -72,9 +72,17 @@ const tick = () => {
 
     // Check for hover state changes and play sounds
     if (hoveringBox !== previousHoveringBox) {
+      // If we stopped hovering over a box, call onHoverLeave
+      if (previousHoveringBox && previousHoveringBox.onHoverLeave) {
+        previousHoveringBox.onHoverLeave();
+      }
       // If we started hovering over a new box with a hover sound
       if (hoveringBox && hoveringBox.hoverSound && !previousHoveringBox) {
         playSound(hoveringBox.hoverSound as any);
+      }
+      // If we started hovering over a new box, call onHover
+      if (hoveringBox && hoveringBox.onHover) {
+        hoveringBox.onHover();
       }
       previousHoveringBox = hoveringBox;
     }
