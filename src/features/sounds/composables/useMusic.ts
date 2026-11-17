@@ -15,14 +15,15 @@ export const useMusic = () => {
   const { isTouch } = useAgent();
 
   const tickVolumes = () => {
-    // If not on home route, always use base volume
+    // Keep music playing continuously across all sections including About
+    musicTracks.bgm.volume(BASE_VOLUMES.bgm);
+
+    // If not on home route, turn off about section ambient track
     if (path.value !== "/") {
-      musicTracks.bgm.volume(BASE_VOLUMES.bgm);
       musicTracks.about.volume(0);
       return;
     }
 
-    musicTracks.bgm.volume(clamp(1 - sceneWeights.about, 0, 1) * BASE_VOLUMES.bgm);
     musicTracks.about.volume(clamp(sceneWeights.about * 1.25 - 0.25, 0, 1) * BASE_VOLUMES.about);
   };
 

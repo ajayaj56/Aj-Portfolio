@@ -26,11 +26,12 @@ const getAriaLabel = (name: string) => `${t("go-to")} ${name.charAt(0).toUpperCa
 
 <template>
   <div class="social">
-    <Link
+    <component
+      :is="item.url ? Link : 'div'"
       v-for="item in social"
       :key="item.name"
       external
-      :href="item.url"
+      :href="item.url || undefined"
       :aria-label="getAriaLabel(item.name)"
       :class="['social-link', 'social-link-' + item.name]"
       data-cursor="circle-white"
@@ -41,9 +42,9 @@ const getAriaLabel = (name: string) => `${t("go-to")} ${name.charAt(0).toUpperCa
         class="children-unclickable"
         data-hoversound="hover"
       >
-        <component :is="icons[item.name]" :aria-label="getAriaLabel(item.name)" external />
+        <component :is="icons[item.name]" :aria-label="getAriaLabel(item.name)" />
       </ButtonRound>
-    </Link>
+    </component>
   </div>
 </template>
 

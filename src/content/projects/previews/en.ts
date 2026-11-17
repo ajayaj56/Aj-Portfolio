@@ -1,40 +1,34 @@
-import thumbnailCubeWar from "../../../assets/thumbnails/cubewar.webp";
-import thumbnailQuibbo from "../../../assets/thumbnails/quibbo.webp";
-import thumbnailParticles from "../../../assets/thumbnails/particles.webp";
-import thumbnailPokedex from "../../../assets/thumbnails/pokedex.webp";
-import thumbnailSharkie from "../../../assets/thumbnails/sharkie.webp";
-
 import type { ProjectPreview } from "../../types";
 
 export default [
   {
-    title: "CubeWar",
-    slug: "cubewar",
-    thumbnail: thumbnailCubeWar,
-    description: "Multiplayer strategy game",
+    title: "Website Development",
+    slug: "website-development",
+    thumbnail: "/projects/website%20development.png",
+    description: "Modern Websites & Responsive Web Experiences",
   },
   {
-    title: "Quibbo",
-    slug: "quibbo",
-    thumbnail: thumbnailQuibbo,
-    description: "Multiplayer gaming platform",
+    title: "UI/UX Design",
+    slug: "ui-ux-design",
+    thumbnail: "/projects/uiux%20design.png",
+    description: "User Interfaces & Digital Experiences",
   },
   {
-    title: "Sharkie",
-    slug: "sharkie",
-    thumbnail: thumbnailSharkie,
-    description: "2D adventure game",
+    title: "Logo & Brand Identity",
+    slug: "logo-brand-identity",
+    thumbnail: "/projects/logo.png",
+    description: "Creative Logos & Visual Branding",
   },
   {
-    title: "WebGL Particles",
-    slug: "particles",
-    thumbnail: thumbnailParticles,
-    description: "Dynamic 3D particles",
+    title: "Poster & Graphic Design",
+    slug: "poster-graphic-design",
+    thumbnail: "/projects/poster%20design.png",
+    description: "Creative Posters & Digital Graphics",
   },
   {
-    title: "Pokédex",
-    slug: "pokedex",
-    thumbnail: thumbnailPokedex,
-    description: "Open-source learning project",
+    title: "Excel Data Quality Control",
+    slug: "excel-data-quality-control",
+    thumbnail: "/projects/quality%20control.png",
+    description: "Data Validation, Quality Checks & Accuracy",
   },
 ] as const satisfies ProjectPreview[];

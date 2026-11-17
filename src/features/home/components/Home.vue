@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Layout from "../../../components/Layout.vue";
 import Hero from "./Hero.vue";
+import AboutSpotlight from "./AboutSpotlight.vue";
 import About from "./About.vue";
 //import AboutSections from "../features/about/Sections.vue";
 import Projects from "./Projects.vue";
@@ -149,6 +150,7 @@ watch(
           :style="{ '--contact-bottom': `${contactBottom}px` }"
         >
           <canvas :class="['three-canvas', { 'three-canvas-contact': !isStickyVisible }]" ref="threeCanvasRef"></canvas>
+          <AboutSpotlight />
           <div :class="{ 'intro-about-hidden': !isStickyVisible }">
             <About :spacer-ref="aboutSpacerRef" />
           </div>
