@@ -3,9 +3,10 @@ import type { ProjectContent } from "../../types";
 export default {
   title: "UI/UX Design",
   theme: "light",
-  tags: ["html", "css", "javascript"],
+  tags: ["figma", "wireframing", "prototyping", "user-research"],
+  subtitle: "User Interfaces & Digital Experiences.",
   description:
-    "User Interfaces & Digital Experiences.<br/><br/>Designing clean, intuitive, and engaging user journeys with Figma.",
+    "Designing clean, intuitive and visually engaging user interfaces with thoughtful layouts, seamless user journeys and interactive prototypes using Figma.",
   components: [
     {
       type: "media",

@@ -3,9 +3,10 @@ import type { ProjectContent } from "../../types";
 export default {
   title: "Poster & Graphic Design",
   theme: "light",
-  tags: ["gray", "html"],
+  tags: ["canva", "photoshop", "graphic-design", "social-media"],
+  subtitle: "Creative Posters & Digital Graphics.",
   description:
-    "Creative Posters & Digital Graphics.<br/><br/>Crafting captivating posters, marketing graphics, and visual storytelling assets.",
+    "Designing visually appealing posters, promotional creatives, social media graphics and marketing materials with engaging compositions.",
   components: [
     {
       type: "media",

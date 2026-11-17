@@ -48,4 +48,5 @@ export const sources = [
   { name: "numbers-bitmap", type: "texture", path: numbersBitmap },
   { name: "room-texture", type: "texture", path: roomTexture },
   { name: "room-shadow-texture", type: "texture", path: roomShadowTexture },
+  { name: "frame-photo", type: "texture", path: "/ajay%20frame.png?v=3" },
 ] as const satisfies Source[];

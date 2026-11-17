@@ -3,9 +3,10 @@ import type { ProjectContent } from "../../types";
 export default {
   title: "Excel Data Quality Control",
   theme: "dark",
-  tags: ["gray", "node"],
+  tags: ["excel", "data-validation", "data-cleaning", "quality-checks"],
+  subtitle: "Data Validation, Quality Checks & Accuracy.",
   description:
-    "Datenvalidierung, Qualitätsprüfungen & Genauigkeit.<br/><br/>Verwaltung von über 50.000 Datensätzen für gründliche Datenbereinigung und Schemavalidierung.",
+    "Managing structured data through Excel, performing data validation, identifying inconsistencies, checking data accuracy and maintaining reliable records.",
   components: [
     {
       type: "media",
@@ -13,7 +14,7 @@ export default {
         type: "image",
         src: "/projects/quality%20control.png",
         alt: "Excel Data Quality Control",
-        caption: "Datenqualität & Validierung",
+        caption: "Data Quality & Validation",
       },
     },
   ],

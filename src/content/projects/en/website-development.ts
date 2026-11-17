@@ -3,9 +3,10 @@ import type { ProjectContent } from "../../types";
 export default {
   title: "Website Development",
   theme: "dark",
-  tags: ["html", "css", "javascript", "react"],
+  tags: ["html", "css", "javascript", "react", "next"],
+  subtitle: "Modern Websites & Responsive Web Experiences.",
   description:
-    "Modern Websites & Responsive Web Experiences.<br/><br/>Crafting fast, accessible, and responsive web experiences tailored to modern standards.",
+    "Creating modern, responsive and high-performance websites with clean layouts, intuitive navigation and engaging user experiences.",
   components: [
     {
       type: "media",

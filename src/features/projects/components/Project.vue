@@ -5,22 +5,44 @@ import { ref, watch } from "vue";
 import { projectModules } from "../../../content/projects";
 import ProjectContent from "./ProjectContent.vue";
 import Footer from "../../../components/Footer.vue";
+import Button from "../../../components/Button.vue";
+import Link from "../../../components/Link.vue";
 import { locale } from "../../../i18n/store";
 import { lenis } from "../../../composables/useScroll";
 
 import type { Locale } from "../../../i18n/types";
+import type { ProjectContent as ProjectContentType } from "../../../content/types";
 
 const loading = ref(true);
-const content = ref(null);
+const content = ref<ProjectContentType | null>(null);
 const error = ref<Error | null>(null);
 
 const fetchProject = async (project: string | undefined) => {
-  try {
-    const module = await projectModules[locale.value as Locale][project as string].default;
-    content.value = module;
+  loading.value = true;
+  error.value = null;
+
+  if (!project) {
+    content.value = null;
     loading.value = false;
+    return;
+  }
+
+  try {
+    const loc = (locale.value as Locale) in projectModules ? (locale.value as Locale) : "en";
+    const locModules = projectModules[loc] || projectModules.en;
+
+    if (locModules && locModules[project]) {
+      const module = await locModules[project].default;
+      content.value = module;
+      error.value = null;
+    } else {
+      // Graceful fallback for unknown project ID
+      error.value = new Error(`Project "${project}" not found`);
+      content.value = null;
+    }
   } catch (err) {
-    error.value = new Error(`Failed to fetch project ${project}`);
+    error.value = err instanceof Error ? err : new Error(`Failed to fetch project ${project}`);
+    content.value = null;
   } finally {
     loading.value = false;
   }
@@ -62,6 +84,18 @@ watch(
         :content="content"
         :projectId="recentProjectId"
       />
+      <!-- Fallback when an unknown project ID is entered or requested -->
+      <div v-else-if="projectVisible && !loading && !content" class="project-fallback">
+        <div class="project-fallback-card">
+          <h1 class="project-fallback-title">Project Not Found</h1>
+          <p class="project-fallback-description">
+            The project you are looking for does not exist or has been moved.
+          </p>
+          <Link to="/" class="project-fallback-button" data-cursor="arrow">
+            <Button variant="accent">Back to Projects</Button>
+          </Link>
+        </div>
+      </div>
       <Footer :class="['project-footer', `project-${recentProjectId}`]"></Footer>
     </div>
   </div>
@@ -84,6 +118,40 @@ watch(
 
     &-visible {
       opacity: 1;
+    }
+  }
+
+  &-fallback {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(var(--height-header) + 48px) var(--space-outer) 96px;
+
+    &-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: var(--space-md);
+      max-width: 520px;
+    }
+
+    &-title {
+      font-size: var(--font-size-title-lg);
+      color: var(--color-text-400);
+      font-weight: 800;
+    }
+
+    &-description {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-400);
+      opacity: 0.85;
+      line-height: var(--line-height-copy);
+    }
+
+    &-button {
+      margin-top: var(--space-sm);
     }
   }
 

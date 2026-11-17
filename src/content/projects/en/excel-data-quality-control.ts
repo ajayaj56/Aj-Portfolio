@@ -3,9 +3,10 @@ import type { ProjectContent } from "../../types";
 export default {
   title: "Excel Data Quality Control",
   theme: "dark",
-  tags: ["gray", "node"],
+  tags: ["excel", "data-validation", "data-cleaning", "quality-checks"],
+  subtitle: "Data Validation, Quality Checks & Accuracy.",
   description:
-    "Data Validation, Quality Checks & Accuracy.<br/><br/>Handled 50K+ records for rigorous data cleaning, schema validation, and reporting.",
+    "Managing structured data through Excel, performing data validation, identifying inconsistencies, checking data accuracy and maintaining reliable records.",
   components: [
     {
       type: "media",

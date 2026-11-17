@@ -9,6 +9,7 @@ export interface ProjectContent {
   title: string;
   theme: "light" | "dark";
   tags: TagVariant[];
+  subtitle?: string;
   description?: string;
   videoBorder?: boolean;
   live?: string;

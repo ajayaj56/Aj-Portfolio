@@ -53,7 +53,7 @@ const ICON_CONFIGS: IconConfig[] = [
   {
     label: "Figma",
     path: "/icons/figma.png",
-    desktopPosition: new Vector3(-2.6, 4.3, 0.2),
+    desktopPosition: new Vector3(-2.8, 5.0, 0.2),
     mobilePosition: new Vector3(-1.3, 4.5, 0.3),
     floatSpeed: 0.65,
     floatAmplitude: 0.14,
@@ -63,7 +63,7 @@ const ICON_CONFIGS: IconConfig[] = [
   {
     label: "Claude",
     path: "/icons/cluade.png",
-    desktopPosition: new Vector3(-3.5, 2.5, 0.3),
+    desktopPosition: new Vector3(-4.5, 2.55, 0.3),
     mobilePosition: new Vector3(-1.4, 3.1, 0.3),
     floatSpeed: 0.75,
     floatAmplitude: 0.12,

@@ -3,9 +3,10 @@ import type { ProjectContent } from "../../types";
 export default {
   title: "Logo & Brand Identity",
   theme: "dark",
-  tags: ["gray", "html"],
+  tags: ["logo-design", "branding", "typography", "color-theory"],
+  subtitle: "Creative Logos & Visual Branding.",
   description:
-    "Creative Logos & Visual Branding.<br/><br/>Building distinctive visual brand identities and timeless logos that resonate.",
+    "Creating distinctive brand identities through creative logo concepts, meaningful typography, balanced color palettes and consistent visual design.",
   components: [
     {
       type: "media",

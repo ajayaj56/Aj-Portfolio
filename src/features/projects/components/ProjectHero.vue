@@ -32,7 +32,10 @@ watch(projectId, () => {
         <Tag v-for="tag in content.tags" :key="tag" :variant="tag" />
       </div>
     </div>
-    <p class="project-hero-description" v-html="content.description"></p>
+    <div class="project-hero-content-col">
+      <h2 v-if="content.subtitle" class="project-hero-subtitle">{{ content.subtitle }}</h2>
+      <p class="project-hero-description" v-html="content.description"></p>
+    </div>
     <div class="project-hero-buttons">
       <Link v-if="content.live" :href="content.live" external class="project-hero-button" data-cursor="arrow-external">
         <Button renderAs="div" variant="accent" class="children-unclickable" data-hoversound="hover">{{
@@ -140,15 +143,19 @@ watch(projectId, () => {
     }
   }
 
-  &-description {
+  &-content-col {
     color: var(--color-text-400);
     line-height: var(--line-height-copy);
     grid-column: 1 / 13;
     align-self: center;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
 
     @include mixins.mq("md") {
       grid-row: 1;
       grid-column: 6 / 12;
+      gap: var(--space-sm);
     }
 
     @include mixins.mq("lg") {
@@ -160,6 +167,25 @@ watch(projectId, () => {
       grid-row: 1;
       grid-column: 7 / 11;
     }
+  }
+
+  &-subtitle {
+    font-size: var(--font-size-md);
+    font-weight: 800;
+    line-height: 1.25;
+    color: var(--color-text-400);
+    letter-spacing: -0.01em;
+
+    @include mixins.mq("md") {
+      font-size: var(--font-size-lg);
+    }
+  }
+
+  &-description {
+    color: var(--color-text-400);
+    line-height: var(--line-height-copy);
+    font-size: var(--font-size-sm);
+    opacity: 0.9;
   }
 
   &-top {
