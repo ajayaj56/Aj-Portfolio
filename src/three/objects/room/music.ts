@@ -14,20 +14,25 @@ let mesh: Mesh | null = null;
 let box3: ClickableBox3 | null = null;
 
 const handleClick = () => {
-  soundsEnabled.value = !soundsEnabled.value;
+  if (Howler.ctx && Howler.ctx.state === "suspended") {
+    Howler.ctx
+      .resume()
+      .then(() => {
+        howlerUnlocked.value = true;
+        soundsEnabled.value = true;
+        localStorage.setItem("portfolio-soundsEnabled", "true");
+      })
+      .catch(() => {});
+  } else {
+    soundsEnabled.value = !soundsEnabled.value;
+    localStorage.setItem("portfolio-soundsEnabled", soundsEnabled.value.toString());
+  }
   playSound("click");
 };
 
 const handleHover = () => {
-  if (Howler.ctx && Howler.ctx.state === "suspended") {
-    Howler.ctx.resume();
-  }
-  if (!howlerUnlocked.value) {
-    howlerUnlocked.value = true;
-  }
-  if (!soundsEnabled.value) {
-    soundsEnabled.value = true;
-    localStorage.setItem("portfolio-soundsEnabled", "true");
+  if (!howlerUnlocked.value || !soundsEnabled.value || (Howler.ctx && Howler.ctx.state === "suspended")) {
+    return;
   }
 
   const track = musicTracks.bgm;

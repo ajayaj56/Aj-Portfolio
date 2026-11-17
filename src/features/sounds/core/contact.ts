@@ -3,6 +3,7 @@ import { sprites } from "../definitions/sprites";
 import { sceneWeights } from "../../../animations/scenes";
 import { clamp } from "../../../utils/math";
 import { projectVisible } from "../../../composables/useRouteObserver";
+import { howlerUnlocked, soundsEnabled } from "../composables/useHowler";
 import gsap from "gsap";
 
 const SNORE_INTERVAL = 2.0833332538604736 * 2;
@@ -21,12 +22,17 @@ const scheduleNextSnore = () => {
   });
 };
 
-scheduleNextSnore();
-playSound("snore");
-
 export const tick = () => {
-  const volume = projectVisible.value ? 0 : clamp(sceneWeights.contact * 0.5, 0, 1);
+  const inContact = sceneWeights.contact > 0.001 && !projectVisible.value;
+  const volume = inContact ? clamp(sceneWeights.contact * 0.5, 0, 1) : 0;
   sprites.contact.howl.volume(volume);
+
+  if (inContact && !snoreTimeout && howlerUnlocked.value && soundsEnabled.value) {
+    currentId = playSound("snore");
+    scheduleNextSnore();
+  } else if (!inContact && snoreTimeout) {
+    stopSnoreRepetition();
+  }
 };
 
 export const stopSnoreRepetition = () => {

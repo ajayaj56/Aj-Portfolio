@@ -21,14 +21,18 @@ export const useHowler = () => {
   const { isTouch } = useAgent();
   const enabledVolume = ref<number>(0);
 
-  const handleUnlocked = () => {
-    howlerUnlocked.value = true;
-
-    // Disable sounds completely on touch devices
-    if (isTouch.value) {
-      soundsEnabled.value = false;
-      return;
+  const loadAllSounds = () => {
+    for (const sound of Object.keys(sounds) as SoundKey[]) {
+      const howl = getSoundsHowl(sound);
+      if (howl) {
+        howl.load();
+      }
     }
+  };
+
+  const handleUnlocked = () => {
+    if (howlerUnlocked.value) return;
+    howlerUnlocked.value = true;
 
     const storeItem = localStorage.getItem("portfolio-soundsEnabled");
     if (storeItem) {
@@ -37,16 +41,43 @@ export const useHowler = () => {
       soundsEnabled.value = true;
       localStorage.setItem("portfolio-soundsEnabled", "true");
     }
+
+    loadAllSounds();
+  };
+
+  const unlockAudioContext = () => {
+    if (howlerUnlocked.value) return;
+
+    if (Howler.ctx && Howler.ctx.state === "suspended") {
+      Howler.ctx
+        .resume()
+        .then(() => {
+          handleUnlocked();
+        })
+        .catch(() => {});
+    } else if (Howler.ctx && Howler.ctx.state === "running") {
+      handleUnlocked();
+    }
+  };
+
+  const gestureEvents = ["click", "pointerdown", "keydown", "touchstart", "touchend"];
+  const onUserGesture = () => {
+    unlockAudioContext();
+    gestureEvents.forEach((event) => window.removeEventListener(event, onUserGesture));
   };
 
   const tick = () => {
     if (!howlerUnlocked.value) {
-      if (Howler.ctx.state !== "running") return;
-      handleUnlocked();
-    } else if (!isTouch.value) {
-      // Only process sounds on non-touch devices
-      contactTick();
-      roomTick();
+      if (Howler.ctx && Howler.ctx.state === "running") {
+        handleUnlocked();
+      }
+      return;
+    } else {
+      // Process spatial sounds on desktop
+      if (!isTouch.value) {
+        contactTick();
+        roomTick();
+      }
 
       const currentVolume = Howler.volume();
       if (currentVolume > 0.99 && enabledVolume.value === 1) {
@@ -68,19 +99,10 @@ export const useHowler = () => {
   };
 
   watch(soundsEnabled, (newVal) => {
-    if (!isFeatureEnabled("sounds") || isTouch.value) return;
+    if (!isFeatureEnabled("sounds")) return;
     enabledVolume.value = newVal ? 1 : 0;
     localStorage.setItem("portfolio-soundsEnabled", newVal.toString());
   });
-
-  const loadAllSounds = () => {
-    for (const sound of Object.keys(sounds) as SoundKey[]) {
-      const howl = getSoundsHowl(sound);
-      if (howl) {
-        howl.load();
-      }
-    }
-  };
 
   onMounted(() => {
     if (!isFeatureEnabled("sounds")) return;
@@ -88,20 +110,27 @@ export const useHowler = () => {
 
     if (howlerUnlocked.value) {
       soundsEnabled.value = localStorage.getItem("portfolio-soundsEnabled") === "true";
+      if (!isTouch.value) {
+        loadAllSounds();
+      }
+    } else {
+      // Listen for genuine user gesture to unlock AudioContext compliant with autoplay policy
+      gestureEvents.forEach((event) => {
+        window.addEventListener(event, onUserGesture, { passive: true });
+      });
     }
 
     gsap.ticker.add(tick);
     window.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("keydown", handleKeyPress);
-
-    if (!isTouch.value) {
-      loadAllSounds();
-    }
   });
 
   onUnmounted(() => {
     if (!isFeatureEnabled("sounds")) return;
     gsap.ticker.remove(tick);
+    gestureEvents.forEach((event) => {
+      window.removeEventListener(event, onUserGesture);
+    });
     window.removeEventListener("visibilitychange", handleVisibilityChange);
     window.removeEventListener("keydown", handleKeyPress);
     stopSnoreRepetition();

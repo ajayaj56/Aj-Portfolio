@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import { transitions } from "../../../animations";
 import { t } from "../../../i18n/utils/translate";
 import ButtonRound from "../../../components/ButtonRound.vue";
+import Link from "../../../components/Link.vue";
 import Github from "../../../components/icons/Github.vue";
 import Mail from "../../../components/icons/Mail.vue";
 import Instagram from "../../../components/icons/Instagram.vue";
@@ -34,8 +35,11 @@ onUnmounted(() => {
       <div class="contact-side contact-side-left">
         <h2 class="contact-title contact-title-left">{{ t("lets-work") }}</h2>
         <div class="contact-social-col contact-social-col-left">
-          <div
+          <component
+            :is="githubItem?.url ? Link : 'div'"
             v-if="githubItem"
+            :href="githubItem.url || undefined"
+            external
             :aria-label="`${t('go-to')} GitHub`"
             class="social-link social-link-github"
             data-cursor="circle-white"
@@ -43,9 +47,12 @@ onUnmounted(() => {
             <ButtonRound renderAs="div" variant="background" class="children-unclickable" data-hoversound="hover">
               <Github />
             </ButtonRound>
-          </div>
-          <div
+          </component>
+          <component
+            :is="mailItem?.url ? Link : 'div'"
             v-if="mailItem"
+            :href="mailItem.url || undefined"
+            external
             :aria-label="`${t('go-to')} Mail`"
             class="social-link social-link-mail"
             data-cursor="circle-white"
@@ -53,7 +60,7 @@ onUnmounted(() => {
             <ButtonRound renderAs="div" variant="background" class="children-unclickable" data-hoversound="hover">
               <Mail />
             </ButtonRound>
-          </div>
+          </component>
         </div>
       </div>
 
@@ -64,8 +71,11 @@ onUnmounted(() => {
       <div class="contact-side contact-side-right">
         <h2 class="contact-title contact-title-right">{{ t("together") }}</h2>
         <div class="contact-social-col contact-social-col-right">
-          <div
+          <component
+            :is="instagramItem?.url ? Link : 'div'"
             v-if="instagramItem"
+            :href="instagramItem.url || undefined"
+            external
             :aria-label="`${t('go-to')} Instagram`"
             class="social-link social-link-instagram"
             data-cursor="circle-white"
@@ -73,9 +83,12 @@ onUnmounted(() => {
             <ButtonRound renderAs="div" variant="background" class="children-unclickable" data-hoversound="hover">
               <Instagram />
             </ButtonRound>
-          </div>
-          <div
+          </component>
+          <component
+            :is="linkedinItem?.url ? Link : 'div'"
             v-if="linkedinItem"
+            :href="linkedinItem.url || undefined"
+            external
             :aria-label="`${t('go-to')} LinkedIn`"
             class="social-link social-link-linkedin"
             data-cursor="circle-white"
@@ -83,7 +96,7 @@ onUnmounted(() => {
             <ButtonRound renderAs="div" variant="background" class="children-unclickable" data-hoversound="hover">
               <Linkedin />
             </ButtonRound>
-          </div>
+          </component>
         </div>
       </div>
     </div>
