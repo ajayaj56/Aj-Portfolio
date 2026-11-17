@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { t } from "../../../i18n/utils/translate";
 import { ref, watchEffect, onBeforeUnmount } from "vue";
 import gsap from "gsap";
 import AppearingText from "../../../components/AppearingText.vue";
 import { BREAKPOINTS } from "../../../utils/sizes";
 import { Vector3 } from "three";
-import PinIcon from "../../../components/icons/Pin.vue";
 import ProjectedElement from "../../../components/ProjectedElement.vue";
+import PinIcon from "../../../components/icons/Pin.vue";
 
 const point = new Vector3(-0.76, 3.6, 6.75);
 
@@ -58,15 +57,12 @@ watchEffect((onInvalidate) => {
         gsap.set(wrapperEl, { clipPath: "inset(0% 0% 0% 0%)" });
       }
 
-      // Only add timeline animations on landscape
-      if (isLandscape) {
-        for (let i = 0; i < timelines.value.length; i++) {
-          const item = timelines.value[i];
-          if (!item) continue;
-          tl.add(() => {
-            item.timeline.restart(true);
-          }, item.delay + 0.25);
-        }
+      for (let i = 0; i < timelines.value.length; i++) {
+        const item = timelines.value[i];
+        if (!item) continue;
+        tl.add(() => {
+          item.timeline.restart(true);
+        }, item.delay + (isLandscape ? 0.25 : 0.15));
       }
 
       emit("timeline:created", tl);
@@ -104,7 +100,7 @@ const handleTimelineCreated = (timeline: gsap.core.Timeline, delay: number) => {
       <div class="box-details-content">
         <div class="box-details-title">
           <AppearingText
-            text="Ajay"
+            text="Ajay Guvva"
             :steps="1"
             :duration="0.35"
             @timeline:created="(tl: gsap.core.Timeline) => handleTimelineCreated(tl, 0)"
@@ -114,9 +110,8 @@ const handleTimelineCreated = (timeline: gsap.core.Timeline, delay: number) => {
           <div class="box-details-item">
             <PinIcon class="box-details-icon" />
             <AppearingText
-              v-if="t('germany')"
               class="box-details-content-copy"
-              :text="t('germany')"
+              text="Karimnagar"
               :steps="3"
               :duration="0.35"
               @timeline:created="(tl: gsap.core.Timeline) => handleTimelineCreated(tl, 0.1)"
@@ -132,20 +127,24 @@ const handleTimelineCreated = (timeline: gsap.core.Timeline, delay: number) => {
 .box-details {
   --line-length: min(48px, calc(var(--svw) * 5));
 
-  display: none;
+  position: absolute;
+  bottom: var(--count-height);
+  width: calc(100% - var(--space-outer) * 2);
+  left: var(--space-outer);
 
   @include mixins.landscape {
-    display: block;
     position: absolute;
+    left: 0;
+    bottom: 0;
     padding-bottom: 3px;
     padding-right: var(--line-length);
-    width: 240px;
+    width: 260px;
     max-width: calc(var(--svw) * 30);
     transform: translate(-100%, -50%);
   }
 
   @include mixins.landscape-large {
-    width: 240px;
+    width: 260px;
   }
 
   &::after,
@@ -188,11 +187,13 @@ const handleTimelineCreated = (timeline: gsap.core.Timeline, delay: number) => {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
     padding: var(--space-sm) var(--space-md);
 
     @include mixins.landscape {
       flex-direction: column;
       justify-content: flex-start;
+      align-items: flex-start;
       padding: var(--space-xs) var(--space-sm);
     }
 
@@ -213,7 +214,7 @@ const handleTimelineCreated = (timeline: gsap.core.Timeline, delay: number) => {
   &-icon {
     width: var(--icon-size-xxs);
     transform: translateY(-1px);
-    --icon-color: var(--color-white-400);
+    --icon-color: var(--color-text-cyan-400);
 
     @include mixins.mq("md") {
       width: var(--icon-size-xs);

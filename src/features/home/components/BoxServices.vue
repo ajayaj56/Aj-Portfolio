@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, watchEffect, onBeforeUnmount } from "vue";
+import { ref, watchEffect, onBeforeUnmount } from "vue";
 import gsap from "gsap";
-import { locale } from "../../../i18n/store";
-import { t } from "../../../i18n/utils/translate";
 import AppearingText from "../../../components/AppearingText.vue";
 import { BREAKPOINTS } from "../../../utils/sizes";
 import { Vector3 } from "three";
@@ -106,25 +104,13 @@ const handleTimelineCreated = (timeline: gsap.core.Timeline, delay: number) => {
   timelines.value = updatedTimelines;
 };
 
-const SERVICES_EN = [
-  { name: "Three.js & WebGL" },
-  { name: "Node.js & WebSockets" },
-  { name: "React & Vue" },
-  { name: "Kubernetes & Redis" },
-  { name: "Real-time Multiplayer" },
+const services = [
+  { name: "Excel Data Management & Quality Checks" },
+  { name: "Website Creation & Management" },
+  { name: "UI/UX Design – Figma" },
+  { name: "Graphic Design – Canva" },
+  { name: "Logo & Poster Design" },
 ] as const satisfies { name: string }[];
-
-const SERVICES_DE = [
-  { name: "Three.js & WebGL" },
-  { name: "Node.js & WebSockets" },
-  { name: "React & Vue" },
-  { name: "Kubernetes & Redis" },
-  { name: "Echtzeit-Mehrspieler" },
-] as const satisfies { name: string }[];
-
-const services = computed(() => {
-  return locale.value === "en" ? SERVICES_EN : SERVICES_DE;
-});
 </script>
 
 <template>
@@ -133,7 +119,7 @@ const services = computed(() => {
       <div class="box-services-content">
         <div class="box-services-title">
           <AppearingText
-            :text="t('services')"
+            text="My Expertise"
             :steps="1"
             :duration="0.35"
             @timeline:created="(tl: gsap.core.Timeline) => handleTimelineCreated(tl, 0)"
@@ -167,7 +153,7 @@ const services = computed(() => {
 
   @include mixins.landscape {
     width: 480px;
-    max-width: calc(var(--svw) * 37);
+    max-width: calc(var(--svw) * 38);
     padding-left: var(--line-length);
     position: relative;
     left: 0;
@@ -177,7 +163,7 @@ const services = computed(() => {
   }
 
   @include mixins.landscape-large {
-    width: 380px;
+    width: 440px;
     max-width: calc(var(--svw) * 36);
   }
 

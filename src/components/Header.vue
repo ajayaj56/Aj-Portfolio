@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import Button from "./Button.vue";
 import Logo from "./Logo.vue";
-import { computed, ref } from "vue";
+import { computed, ref, watchEffect } from "vue";
 import { t } from "../i18n/utils/translate";
 import { useHeaderTheme } from "../composables/useHeaderTheme";
 import { lenis } from "../composables/useScroll";
 import { projectId } from "../composables/useRouteObserver";
-import { social } from "../content/social";
 import ButtonRound from "./ButtonRound.vue";
 import ArrowRight from "./icons/ArrowRight.vue";
 import SoundsToggle from "./SoundsToggle.vue";
@@ -18,19 +16,41 @@ const router = useRouter();
 const { isFirstRoute } = useFirstRoute();
 
 const scrolledPastHeroVisible = ref(false);
-const { isDarkTheme } = useHeaderTheme({
-  onUpdate: (element, boundingClientRect, hasScrolledIntoView) => {
-    if (!element || !boundingClientRect) {
-      scrolledPastHeroVisible.value = false;
-      return;
-    }
+const { isDarkTheme } = useHeaderTheme();
 
-    if (hasScrolledIntoView) {
-      scrolledPastHeroVisible.value = true;
-    } else {
-      scrolledPastHeroVisible.value = false;
-    }
-  },
+watchEffect((onInvalidate: (cleanupFn: () => void) => void) => {
+  const checkScroll = (scrollPos: number) => {
+    scrolledPastHeroVisible.value = scrollPos > 80;
+  };
+
+  const handleNativeScroll = () => {
+    checkScroll(window.scrollY);
+  };
+
+  if (typeof window !== "undefined") {
+    window.addEventListener("scroll", handleNativeScroll, { passive: true });
+    checkScroll(window.scrollY);
+  }
+
+  if (lenis.value) {
+    const handleLenisScroll = ({ scroll }: { scroll: number }) => {
+      checkScroll(scroll);
+    };
+    lenis.value.on("scroll", handleLenisScroll);
+
+    onInvalidate(() => {
+      lenis.value?.off("scroll", handleLenisScroll);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("scroll", handleNativeScroll);
+      }
+    });
+  } else {
+    onInvalidate(() => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("scroll", handleNativeScroll);
+      }
+    });
+  }
 });
 
 const handleBackClick = () => {
@@ -56,13 +76,6 @@ const classNames = computed(() => {
     [`project-${projectId.value}`]: projectId.value !== null,
   };
 });
-
-const getInTouchClassNames = computed(() => {
-  return {
-    "header-get-in-touch": true,
-    "header-get-in-touch-isProjectPage": projectId.value !== null,
-  };
-});
 </script>
 
 <template>
@@ -80,33 +93,23 @@ const getInTouchClassNames = computed(() => {
       >
         <ArrowRight class="header-back-icon" />
       </ButtonRound>
-    </div>
-    <div
-      :class="{
-        'header-logo': true,
-        'header-logo-isProjectPage': projectId !== null,
-        'header-logo-clickable': scrolledPastHeroVisible,
-        'children-unclickable': true,
-      }"
-      @click="handleLogoClick"
-      data-sound="click"
-      data-hoversound="hover"
-      data-cursor="circle-white"
-    >
-      <Logo class="header-logo-image" />
+
+      <div
+        v-else
+        :class="{
+          'header-logo': true,
+          'header-logo-visible': scrolledPastHeroVisible,
+          'children-unclickable': true,
+        }"
+        @click="handleLogoClick"
+        data-sound="click"
+        data-hoversound="hover"
+        data-cursor="circle-white"
+      >
+        <Logo class="header-logo-image" />
+      </div>
     </div>
     <div class="header-right">
-      <Button
-        renderAs="a"
-        variant="accent"
-        :aria-label="t('get-in-touch')"
-        :href="social.find((item) => item.name === 'mail')?.url ?? ''"
-        external
-        :class="getInTouchClassNames"
-        data-cursor="circle-white"
-        data-hoversound="hover"
-        >{{ t("get-in-touch") }}</Button
-      >
       <SoundsToggle class="header-sounds-toggle" :isDarkTheme="isDarkTheme" v-if="isFeatureEnabled('sounds')" />
     </div>
   </header>
@@ -159,14 +162,6 @@ const getInTouchClassNames = computed(() => {
     transform: translateY(-50%);
   }
 
-  &-get-in-touch {
-    width: fit-content;
-
-    &-isProjectPage {
-      opacity: 1 !important;
-    }
-  }
-
   &-right {
     position: absolute;
     right: var(--space-outer);
@@ -187,50 +182,34 @@ const getInTouchClassNames = computed(() => {
     --icon-color: var(--color-white-400);
   }
 
-  &-get-in-touch {
-    display: none;
-
-    @include mixins.mq("md") {
-      display: flex;
-    }
-  }
-
   &-logo {
     cursor: pointer;
     display: flex;
+    align-items: center;
     gap: var(--space-xs);
-    transition: color 0.2s ease-in-out;
-    opacity: var(--scrolled);
+    opacity: 0;
     pointer-events: none;
+    transform: translateY(-6px);
+    transition:
+      opacity 0.3s ease-in-out,
+      transform 0.3s ease-in-out;
 
-    &-clickable {
-      pointer-events: all;
+    &-visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
     }
 
     @include mixins.mq("md") {
       gap: var(--space-sm);
     }
 
-    &-isProjectPage {
-      transition: opacity 0.2s ease-in-out;
-      pointer-events: none;
-      opacity: 0;
-    }
-
     &-image {
-      width: 36px;
+      height: 36px;
+      width: auto;
 
       @include mixins.mq("md") {
-        width: 40px;
-      }
-    }
-
-    &-text {
-      font-weight: 900;
-      font-size: 18px;
-
-      @include mixins.mq("md") {
-        font-size: 20px;
+        height: 42px;
       }
     }
   }

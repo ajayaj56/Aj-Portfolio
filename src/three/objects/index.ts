@@ -6,6 +6,7 @@ import { gridFloor } from "./grid-floor";
 import { lab } from "./lab";
 import { room } from "./room";
 import { sleepingSprite } from "./contact/sleeping-sprite";
+import { floatingIcons } from "./floating-icons";
 import { renderer } from "../core/renderer";
 
 const init = () => {
@@ -17,6 +18,7 @@ const init = () => {
   lab.init();
   room.init();
   sleepingSprite.init();
+  floatingIcons.init();
 
   renderer.compile();
 };
@@ -30,6 +32,7 @@ const destroy = () => {
   lab.destroy();
   room.destroy();
   sleepingSprite.destroy();
+  floatingIcons.destroy();
 };
 
 export const objects = { init, destroy };

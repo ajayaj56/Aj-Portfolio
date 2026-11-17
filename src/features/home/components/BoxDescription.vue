@@ -4,9 +4,7 @@ import gsap from "gsap";
 import { BREAKPOINTS } from "../../../utils/sizes";
 import { Vector3 } from "three";
 import ProjectedElement from "../../../components/ProjectedElement.vue";
-import { t } from "../../../i18n/utils/translate";
 import AppearingText from "../../../components/AppearingText.vue";
-import PinIcon from "../../../components/icons/Pin.vue";
 
 const point = new Vector3(-0.9, 2, 6.75);
 
@@ -98,20 +96,20 @@ const handleTimelineCreated = (timeline: gsap.core.Timeline, delay: number) => {
   <ProjectedElement :point="point">
     <div ref="wrapperRef" class="box-description">
       <div class="box-description-content">
-        <div class="box-description-details">
-          <p class="box-description-details-name">Ajay</p>
-          <div class="box-description-details-location">
-            <PinIcon class="box-description-details-location-icon" />
-            <p class="box-description-details-location-copy">{{ t("germany") }}</p>
-          </div>
+        <div class="box-description-title">
+          <AppearingText
+            text="What I Do"
+            :steps="1"
+            :duration="0.35"
+            @timeline:created="(tl: gsap.core.Timeline) => handleTimelineCreated(tl, 0)"
+          />
         </div>
-        <div class="box-description-line"></div>
         <div class="box-description-copy">
           <AppearingText
-            :text="t('about-tagline')"
+            text="I transform ideas into digital experiences through website creation, intuitive UI/UX designs, creative graphics and structured data management."
             :steps="3"
             :duration="0.7"
-            @timeline:created="(tl: gsap.core.Timeline) => handleTimelineCreated(tl, 0)"
+            @timeline:created="(tl: gsap.core.Timeline) => handleTimelineCreated(tl, 0.15)"
           />
         </div>
       </div>
@@ -143,48 +141,6 @@ const handleTimelineCreated = (timeline: gsap.core.Timeline, delay: number) => {
   @include mixins.landscape-large {
     width: 410px;
     max-width: calc(var(--svw) * 32);
-  }
-
-  &-line {
-    width: 100%;
-    height: 1px;
-    background-color: var(--color-cyan-400);
-
-    @include mixins.landscape {
-      display: none;
-    }
-  }
-
-  &-details {
-    padding: var(--space-sm) var(--space-md);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    @include mixins.landscape {
-      display: none;
-    }
-
-    &-name {
-      font-size: var(--font-size-title-xs);
-      font-weight: 700;
-    }
-
-    &-location {
-      display: flex;
-      align-items: center;
-      gap: var(--space-xs);
-
-      &-icon {
-        width: var(--icon-size-xs);
-        --icon-color: var(--color-white-400);
-        transform: translateY(-1px);
-      }
-
-      &-copy {
-        font-size: var(--font-size-md);
-      }
-    }
   }
 
   &::after,
@@ -223,6 +179,9 @@ const handleTimelineCreated = (timeline: gsap.core.Timeline, delay: number) => {
     border: var(--stroke-sm) solid var(--color-cyan-400);
     border-radius: var(--radius-md);
     background: linear-gradient(to bottom, var(--color-hologram-top) 0%, var(--color-hologram-bottom) 100%);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
 
     @include mixins.landscape {
       padding: var(--space-xs) var(--space-sm);
@@ -233,10 +192,26 @@ const handleTimelineCreated = (timeline: gsap.core.Timeline, delay: number) => {
     }
   }
 
+  &-title {
+    font-size: var(--font-size-title-xxs);
+    font-weight: 700;
+    padding: var(--space-sm) var(--space-md) 0 var(--space-md);
+
+    @include mixins.landscape {
+      padding: 0;
+      font-size: var(--font-size-title-xxs);
+    }
+
+    @include mixins.mq("md") {
+      font-size: var(--font-size-title-xs);
+    }
+  }
+
   &-copy {
     will-change: opacity;
-    font-size: var(--font-size-md);
-    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-size-sm);
+    line-height: 1.4;
+    padding: var(--space-xs) var(--space-md) var(--space-sm) var(--space-md);
 
     @include mixins.landscape {
       padding: 0;
@@ -244,7 +219,7 @@ const handleTimelineCreated = (timeline: gsap.core.Timeline, delay: number) => {
     }
 
     @include mixins.landscape-large {
-      font-size: var(--font-size-lg);
+      font-size: var(--font-size-md);
     }
   }
 }

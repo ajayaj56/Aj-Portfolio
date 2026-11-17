@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import Social from "./Social.vue";
-import Link from "./Link.vue";
 import Clickable from "./Clickable.vue";
-import LangSwitch from "./LangSwitch.vue";
 import NotchSection from "./NotchSection.vue";
 import { t } from "../i18n/utils/translate";
-import { locale } from "../i18n/store";
 import ButtonRound from "./ButtonRound.vue";
 import { lenis } from "../composables/useScroll";
 import ArrowRightLong from "./icons/ArrowRightLong.vue";
@@ -15,8 +12,11 @@ interface Props {
 }
 
 const handleBackToTop = () => {
-  if (!lenis.value) return;
-  lenis.value.scrollTo(0);
+  if (lenis.value) {
+    lenis.value.scrollTo(0);
+  } else {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 };
 
 const { withSocial = true } = defineProps<Props>();
@@ -41,33 +41,6 @@ const showAttribution = import.meta.env.VITE_SHOW_ATTRIBUTION !== "false";
       </div>
       <div class="footer-top">
         <Social v-if="withSocial" />
-        <div class="footer-top-links">
-          <div class="footer-top-links-legal">
-            <Clickable renderAs="div">
-              <Link
-                :href="locale === 'de' ? '/de/privacy' : '/privacy'"
-                class="footer-link"
-                :external="true"
-                data-cursor="circle-white"
-                data-sound="click"
-                data-hoversound="hover"
-                >{{ t("privacy") }}</Link
-              >
-            </Clickable>
-            <Clickable renderAs="div">
-              <Link
-                :href="locale === 'de' ? '/de/legal' : '/legal'"
-                class="footer-link children-unclickable"
-                :external="true"
-                data-cursor="circle-white"
-                data-sound="click"
-                data-hoversound="hover"
-                >{{ t("legal") }}</Link
-              >
-            </Clickable>
-          </div>
-          <LangSwitch />
-        </div>
       </div>
       <div class="footer-credits">
         <div v-if="showAttribution" class="footer-credits-built">
@@ -75,32 +48,30 @@ const showAttribution = import.meta.env.VITE_SHOW_ATTRIBUTION !== "false";
             {{ t("original-concept-by") }}
           </p>
           <Clickable renderAs="div">
-            <Link
-              href="https://david-hckh.com"
+            <button
+              type="button"
               class="footer-link children-unclickable"
-              external
+              @click="handleBackToTop"
               data-cursor="circle-white"
+              data-sound="click"
               data-hoversound="hover"
-              >Ajay Guvva</Link
             >
+              Ajay Guvva
+            </button>
           </Clickable>
         </div>
-        <div class="footer-credits-music">
-          <p>
-            {{ t("music-produced-by") }}
-          </p>
-          <Clickable renderAs="div">
-            <Link
-              href="https://soundcloud.com/hmsurf"
-              class="footer-link children-unclickable"
-              external
-              data-cursor="circle-white"
-              data-hoversound="hover"
-              >HM Surf</Link
-            >
-          </Clickable>
+        <div class="footer-credits-company">
+          <p>Creative mind at</p>
+          <a
+            href="https://www.abhivorn.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="gradient-link"
+            data-cursor="circle-white"
+            data-hoversound="hover"
+          >Abhivorn Technologies Pvt. Ltd.</a>
         </div>
-        <p>© {{ new Date().getFullYear() }} Ajay Guvva</p>
+        <p>© {{ new Date().getFullYear() }} <button type="button" class="footer-link-subtle" @click="handleBackToTop" data-cursor="circle-white" data-sound="click" data-hoversound="hover">Ajay Guvva</button></p>
       </div>
     </div>
   </footer>
@@ -144,7 +115,7 @@ const showAttribution = import.meta.env.VITE_SHOW_ATTRIBUTION !== "false";
     display: flex;
     flex-direction: column;
     width: 100%;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     gap: var(--space-xl);
 
@@ -152,30 +123,40 @@ const showAttribution = import.meta.env.VITE_SHOW_ATTRIBUTION !== "false";
       gap: var(--space-md);
       flex-direction: row;
     }
-
-    &-links {
-      display: flex;
-      flex-direction: column-reverse;
-      align-items: center;
-      gap: var(--space-md);
-
-      &-legal {
-        display: flex;
-        flex-direction: row;
-        gap: var(--space-md);
-      }
-
-      @include mixins.mq("md") {
-        gap: var(--space-lg);
-        flex-direction: row;
-        position: relative;
-        margin-left: auto;
-      }
-    }
   }
 
   &-link {
     font-weight: 700;
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  &-link-subtle {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+    font-weight: 700;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 0.8;
+    }
   }
 
   &-credits {
@@ -188,11 +169,44 @@ const showAttribution = import.meta.env.VITE_SHOW_ATTRIBUTION !== "false";
     text-align: center;
 
     &-built,
-    &-music {
+    &-company {
       display: flex;
       flex-direction: row;
       align-items: center;
       gap: var(--space-xxs);
+    }
+
+    .gradient-link {
+      font-weight: 700;
+      background: linear-gradient(90deg, #2DC0EB, #03366E, #2DC0EB);
+      background-size: 200% auto;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradient-flow 3s linear infinite;
+      text-decoration: none;
+      cursor: pointer;
+      transition: filter 0.3s ease, text-shadow 0.3s ease;
+
+      @include mixins.hover {
+        filter: brightness(1.2);
+        text-shadow: 0 0 20px rgba(45, 192, 235, 0.3), 0 0 40px rgba(45, 192, 235, 0.15);
+      }
+    }
+
+    @keyframes gradient-flow {
+      0% {
+        background-position: 0% center;
+      }
+      100% {
+        background-position: 200% center;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .gradient-link {
+        animation: none;
+      }
     }
   }
 

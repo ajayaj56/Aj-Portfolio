@@ -212,10 +212,10 @@ const setupSectionsAnimation = ({
     tl.to(completed, { value: true, duration: 0 }, 1);
 
     if (isLandscape) {
-      // Equal spacing between three animations: 0, 0.275, 0.55
+      // All three cards appear together right at the start of the About section
       const DETAILS_DELAY = 0;
-      const DESCRIPTION_DELAY = 0.4;
-      const SERVICES_DELAY = 0.8;
+      const DESCRIPTION_DELAY = 0;
+      const SERVICES_DELAY = 0;
 
       // Details animation (first, only on landscape)
       tl.fromTo(contentDetails, { opacity: 0 }, { opacity: 1, duration: 0.15, ease: "power1.out" }, DETAILS_DELAY);
@@ -236,18 +236,29 @@ const setupSectionsAnimation = ({
         tlDescription?.play();
       }, DESCRIPTION_DELAY);
 
-      // Services animation
+      // Services animation (right card: shows immediately alongside left cards)
       tl.fromTo(contentServices, { opacity: 0 }, { opacity: 1, duration: 0.15, ease: "power1.out" }, SERVICES_DELAY);
       //tl.fromTo(contentServices, { y: "12.5vh" }, { y: 0, duration: 0.35, ease: "none" }, SERVICES_DELAY);
       tl.add(() => {
         tlServices?.play();
       }, SERVICES_DELAY);
     } else {
-      // Mobile: only description and services (details hidden on portrait)
-      const DESCRIPTION_DELAY = 0;
-      const SERVICES_DELAY = 0.6;
+      // Mobile: all three cards in sequence (details, description, services)
+      const DETAILS_DELAY = 0;
+      const DESCRIPTION_DELAY = 0.35;
+      const SERVICES_DELAY = 0.7;
 
-      // Details animation disabled - BoxDetails is hidden on portrait
+      // Details animation
+      tl.fromTo(
+        contentDetails,
+        { opacity: 0, y: "10vh" },
+        { opacity: 1, y: "0vh", duration: 0.15, ease: "power1.out" },
+        DETAILS_DELAY,
+      );
+      tl.to(contentDetails, { opacity: 0, y: "-10vh", duration: 0.15, ease: "power1.out" }, DESCRIPTION_DELAY - 0.075);
+      tl.add(() => {
+        tlDetails?.play();
+      }, DETAILS_DELAY);
 
       // Description animation
       tl.fromTo(
@@ -277,7 +288,7 @@ const setupSectionsAnimation = ({
         contentProgressCount,
         { opacity: 0, y: "10vh" },
         { opacity: 1, y: "0vh", duration: 0.15, ease: "power1.out" },
-        DESCRIPTION_DELAY,
+        DETAILS_DELAY,
       );
     }
   });
