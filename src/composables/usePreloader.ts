@@ -2,6 +2,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import { resources } from "../utils/resources";
 import { startAudio } from "../features/sounds/composables/useHowler";
 import { animations as avatarAnimations } from "../three/objects/avatar/animations";
+import { Howler } from "howler";
 import gsap from "gsap";
 
 export const preloaderVisible = ref(true);
@@ -9,8 +10,18 @@ export const preloaderVisible = ref(true);
 export const usePreloader = () => {
   let masterTimeline: gsap.core.Timeline | null = null;
   let readyHandler: (() => void) | null = null;
+  let isFinished = false;
+
+  const unlockOnPreloaderGesture = () => {
+    if (Howler.ctx && Howler.ctx.state === "suspended") {
+      Howler.ctx.resume().catch(() => {});
+    }
+  };
 
   onMounted(() => {
+    window.addEventListener("pointerdown", unlockOnPreloaderGesture, { passive: true });
+    window.addEventListener("touchstart", unlockOnPreloaderGesture, { passive: true });
+
     const preloader = document.querySelector(".preloader") as HTMLElement | null;
     const logoWrap = document.querySelector(".preloader-logo-wrap") as HTMLElement | null;
     const colorLogo = document.querySelector(".preloader-logo-color") as HTMLElement | null;
@@ -42,6 +53,8 @@ export const usePreloader = () => {
     updateClipPath();
 
     const finishPreloader = () => {
+      if (isFinished) return;
+      isFinished = true;
       document.body.classList.remove("is-loading");
       preloader.classList.add("preloader-hidden");
       preloader.style.display = "none";
@@ -144,6 +157,8 @@ export const usePreloader = () => {
   });
 
   onUnmounted(() => {
+    window.removeEventListener("pointerdown", unlockOnPreloaderGesture);
+    window.removeEventListener("touchstart", unlockOnPreloaderGesture);
     if (readyHandler) {
       resources.off("ready", readyHandler);
       readyHandler = null;
