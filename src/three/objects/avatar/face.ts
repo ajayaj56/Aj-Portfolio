@@ -1,9 +1,10 @@
-import { LinearSRGBColorSpace, ShaderMaterial } from "three";
+import { LinearSRGBColorSpace, ShaderMaterial, Vector2 } from "three";
 import { resources } from "../../../utils/resources";
 import fragmentShader from "../../shaders/avatar-face/fragment.glsl";
 import vertexShader from "../../shaders/avatar-face/vertex.glsl";
 import { avatar } from "./index";
 import gsap from "gsap";
+import { isTouch } from "../../../utils/observer";
 
 import type { Material } from "three";
 import { sceneWeights } from "../../../animations/scenes";
@@ -27,16 +28,40 @@ const FRAME_INDEXES = {
 
 const blinkFrame = { value: 0 };
 
-const uniforms = { uFrame: { value: 0 } };
+const targetEyeOffset = new Vector2(0, 0);
+const currentEyeOffset = new Vector2(0, 0);
+
+const uniforms = {
+  uFrame: { value: 0 },
+  uEyeOffset: { value: new Vector2(0, 0) },
+};
 
 const sceneFrames: Record<"intro" | "contact", keyof typeof FRAME_INDEXES> = {
   intro: "default-0",
   contact: "sleeping",
 };
 
+const onMouseMove = (event: MouseEvent) => {
+  if (isTouch()) return;
+  const x = (event.clientX / window.innerWidth) * 2 - 1;
+  const y = -((event.clientY / window.innerHeight) * 2 - 1);
+  targetEyeOffset.set(
+    Math.max(-1, Math.min(1, x)),
+    Math.max(-1, Math.min(1, y))
+  );
+};
+
+const onMouseLeave = () => {
+  targetEyeOffset.set(0, 0);
+};
+
 const init = () => {
   gsap.ticker.add(tick);
   scheduleBlinkInterval();
+  if (!isTouch()) {
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseleave", onMouseLeave);
+  }
 };
 
 const scheduleBlinkInterval = () => {
@@ -105,6 +130,26 @@ const wave = () => {
 
 const tick = () => {
   const isContact = sceneWeights.contact > 0.001;
+  const isAwakeContact = isContact && sceneFrames.contact.startsWith("proud");
+
+  if (isAwakeContact && !isTouch()) {
+    // If blinking (eyelids closing), damp tracking so eyes naturally center
+    const blinkDamp = Math.max(0, 1 - blinkFrame.value * 0.7);
+    const desiredX = targetEyeOffset.x * blinkDamp;
+    const desiredY = targetEyeOffset.y * blinkDamp;
+    currentEyeOffset.x += (desiredX - currentEyeOffset.x) * 0.1;
+    currentEyeOffset.y += (desiredY - currentEyeOffset.y) * 0.1;
+  } else {
+    // Smoothly return to center when not in contact, sleeping, or on touch devices
+    currentEyeOffset.x += (0 - currentEyeOffset.x) * 0.1;
+    currentEyeOffset.y += (0 - currentEyeOffset.y) * 0.1;
+  }
+
+  if (Math.abs(currentEyeOffset.x) < 0.0001) currentEyeOffset.x = 0;
+  if (Math.abs(currentEyeOffset.y) < 0.0001) currentEyeOffset.y = 0;
+
+  uniforms.uEyeOffset.value.copy(currentEyeOffset);
+
   if (isContact) {
     const name = sceneFrames.contact.startsWith("proud")
       ? `proud-${Math.round(blinkFrame.value)}`
@@ -124,6 +169,8 @@ const tick = () => {
 };
 
 const destroy = () => {
+  window.removeEventListener("mousemove", onMouseMove);
+  window.removeEventListener("mouseleave", onMouseLeave);
   gsap.ticker.remove(tick);
 };
 

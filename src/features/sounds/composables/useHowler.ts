@@ -9,6 +9,7 @@ import { stopSnoreRepetition } from "../core/contact";
 import { tick as roomTick } from "../core/room";
 import { sounds } from "../definitions/sounds";
 import { getSoundsHowl } from "../utils/sounds";
+import { musicTracks } from "../definitions/music";
 
 import type { SoundKey } from "../types";
 
@@ -16,6 +17,29 @@ export const howlerUnlocked = ref(false);
 export const soundsEnabled = ref(false);
 
 Howler.volume(0);
+
+export const startAudio = () => {
+  soundsEnabled.value = true;
+  localStorage.setItem("portfolio-soundsEnabled", "true");
+
+  const start = () => {
+    howlerUnlocked.value = true;
+    for (const sound of Object.keys(sounds) as SoundKey[]) {
+      const howl = getSoundsHowl(sound);
+      if (howl) howl.load();
+    }
+    if (!musicTracks.bgm.playing()) {
+      musicTracks.bgm.load();
+      musicTracks.bgm.play();
+    }
+  };
+
+  if (Howler.ctx && Howler.ctx.state === "suspended") {
+    Howler.ctx.resume().then(start).catch(start);
+  } else {
+    start();
+  }
+};
 
 export const useHowler = () => {
   const { isTouch } = useAgent();
@@ -43,6 +67,11 @@ export const useHowler = () => {
     }
 
     loadAllSounds();
+
+    if (soundsEnabled.value && !musicTracks.bgm.playing()) {
+      musicTracks.bgm.load();
+      musicTracks.bgm.play();
+    }
   };
 
   const unlockAudioContext = () => {
@@ -60,9 +89,13 @@ export const useHowler = () => {
     }
   };
 
-  const gestureEvents = ["click", "pointerdown", "keydown", "touchstart", "touchend"];
+  const gestureEvents = ["click", "pointerdown", "keydown", "touchstart", "touchend", "pointermove", "mousemove"];
   const onUserGesture = () => {
     unlockAudioContext();
+    if (soundsEnabled.value && !musicTracks.bgm.playing()) {
+      musicTracks.bgm.load();
+      musicTracks.bgm.play();
+    }
     gestureEvents.forEach((event) => window.removeEventListener(event, onUserGesture));
   };
 
@@ -79,11 +112,18 @@ export const useHowler = () => {
         roomTick();
       }
 
+      // Ensure music is playing if sounds are active
+      if (soundsEnabled.value && !musicTracks.bgm.playing()) {
+        if (!Howler.ctx || Howler.ctx.state === "running") {
+          musicTracks.bgm.play();
+        }
+      }
+
       const currentVolume = Howler.volume();
       if (currentVolume > 0.99 && enabledVolume.value === 1) {
         return;
       }
-      const speed = enabledVolume.value === 1 ? 0.01 : 0.05;
+      const speed = enabledVolume.value === 1 ? 0.04 : 0.05;
       Howler.volume(lerp(currentVolume, enabledVolume.value, speed));
     }
   };

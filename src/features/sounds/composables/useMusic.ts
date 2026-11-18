@@ -33,17 +33,31 @@ export const useMusic = () => {
 
   const play = (trackId: MusicTrack) => {
     if (!isFeatureEnabled("sounds")) return;
-    if (Howler.ctx && Howler.ctx.state === "suspended") return;
     const track = musicTracks[trackId];
-    if (!track || track.playing()) return;
-    track.load();
-    track.play();
+    if (!track) return;
+
+    if (Howler.ctx && Howler.ctx.state === "suspended") {
+      Howler.ctx
+        .resume()
+        .then(() => {
+          if (!track.playing()) {
+            track.load();
+            track.play();
+          }
+        })
+        .catch(() => {});
+      return;
+    }
+
+    if (!track.playing()) {
+      track.load();
+      track.play();
+    }
   };
 
   watchEffect(() => {
     if (!isFeatureEnabled("sounds")) return;
     if (!howlerUnlocked.value || !soundsEnabled.value) return;
-    if (Howler.ctx && Howler.ctx.state === "suspended") return;
 
     play("bgm");
     play("about");

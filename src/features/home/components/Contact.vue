@@ -9,8 +9,14 @@ import Mail from "../../../components/icons/Mail.vue";
 import Instagram from "../../../components/icons/Instagram.vue";
 import Linkedin from "../../../components/icons/Linkedin.vue";
 import { social } from "../../../content/social";
+import { useGradientSpotlight } from "../../../composables/useGradientSpotlight";
 
 const contactElement = ref<HTMLElement | null>(null);
+const contactTitleLeftRef = ref<HTMLElement | null>(null);
+const contactTitleRightRef = ref<HTMLElement | null>(null);
+
+useGradientSpotlight(contactTitleLeftRef);
+useGradientSpotlight(contactTitleRightRef);
 
 const githubItem = social.find((s) => s.name === "github");
 const mailItem = social.find((s) => s.name === "mail");
@@ -33,7 +39,7 @@ onUnmounted(() => {
     <div class="contact-inner">
       <!-- Left side: "Let's work" + GitHub & Mail icons -->
       <div class="contact-side contact-side-left">
-        <h2 class="contact-title contact-title-left">{{ t("lets-work") }}</h2>
+        <h2 class="contact-title contact-title-left" ref="contactTitleLeftRef">{{ t("lets-work") }}</h2>
         <div class="contact-social-col contact-social-col-left">
           <component
             :is="githubItem?.url ? Link : 'div'"
@@ -69,7 +75,7 @@ onUnmounted(() => {
 
       <!-- Right side: "together!" + Instagram & LinkedIn icons -->
       <div class="contact-side contact-side-right">
-        <h2 class="contact-title contact-title-right">{{ t("together") }}</h2>
+        <h2 class="contact-title contact-title-right" ref="contactTitleRightRef">{{ t("together") }}</h2>
         <div class="contact-social-col contact-social-col-right">
           <component
             :is="instagramItem?.url ? Link : 'div'"

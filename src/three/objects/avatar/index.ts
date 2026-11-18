@@ -1,5 +1,5 @@
 import { resources } from "../../../utils/resources";
-import { Mesh, Vector3, Euler, Group, ShaderMaterial, LinearSRGBColorSpace } from "three";
+import { Mesh, Vector3, Euler, Group, ShaderMaterial, LinearSRGBColorSpace, Box3 } from "three";
 import { scene } from "../../core/scene";
 import { animations } from "./animations";
 import { sceneWeights, sceneWeightsInOut } from "../../../animations/scenes";
@@ -12,12 +12,18 @@ import headVertexShader from "../../shaders/avatar-head/vertex.glsl";
 import headFragmentShader from "../../shaders/avatar-head/fragment.glsl";
 import gsap from "gsap";
 import { aboutProgress } from "../../../animations/transitions/about";
+import { raycast } from "../../utils/raycast";
+import { playSound } from "../../../features/sounds/utils/sounds";
 //import { avatarHologram } from "./hologram";
 
 import type { Material, Bone, Texture } from "three";
+import type { ClickableBox3 } from "../../types";
 
 let mesh: Mesh | null = null;
 let rightHandBone: Bone | null = null;
+let clickableBox: ClickableBox3 | null = null;
+const localBoxMin = new Vector3(-1.6, 2.0, -1.7);
+const localBoxMax = new Vector3(1.6, 6.5, 2.7);
 
 const tIdleIntensity = { value: 0 };
 
@@ -127,6 +133,23 @@ const setupMesh = () => {
   rightHandBone = mesh.getObjectByName("bone-right-hand") as Bone;
 
   scene.instance.add(transform);
+
+  clickableBox = new Box3() as ClickableBox3;
+  clickableBox.min.copy(localBoxMin).add(transform.position);
+  clickableBox.max.copy(localBoxMax).add(transform.position);
+  clickableBox.onClick = () => {
+    if (sceneWeights.contact > 0.001) {
+      if (!animations.getIsAwake()) {
+        animations.wakeUp();
+      }
+      return;
+    }
+    animations.wave();
+    playSound("click");
+  };
+  clickableBox.hoverSound = "hover";
+
+  raycast.boxesToCheck.push(clickableBox);
 };
 
 const tick = () => {
@@ -140,11 +163,20 @@ const tick = () => {
     uniforms.uProgress.value = 0;
     uniforms.uAmbientStrength.value = 0;
     transform.visible = true;
+    if (clickableBox) {
+      clickableBox.min.copy(localBoxMin).add(transform.position);
+      clickableBox.max.copy(localBoxMax).add(transform.position);
+    }
     return;
   }
 
   transform.position.copy(waypointsPosition);
   transform.rotation.copy(waypointsRotation);
+
+  if (clickableBox) {
+    clickableBox.min.copy(localBoxMin).add(transform.position);
+    clickableBox.max.copy(localBoxMax).add(transform.position);
+  }
 
   //uniforms.uProgress.value = sceneWeightsInOut.about.in * 1.1 - 0.1;
   uniforms.uProgress.value = aboutProgress.value * 1.1 - 0.1;
@@ -161,6 +193,13 @@ const tick = () => {
 const destroy = () => {
   //mesh = null;
   //transform.clear();
+  if (clickableBox) {
+    const index = raycast.boxesToCheck.indexOf(clickableBox);
+    if (index !== -1) {
+      raycast.boxesToCheck.splice(index, 1);
+    }
+    clickableBox = null;
+  }
   face.destroy();
   gsap.ticker.remove(tick);
 };

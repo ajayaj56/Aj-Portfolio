@@ -1,9 +1,14 @@
 <script setup>
+import { ref } from "vue";
 import Button from "../../../components/Button.vue";
 import Banner from "../../../components/Banner.vue";
 import { preloaderVisible } from "../../../composables/usePreloader";
 import { t } from "../../../i18n/utils/translate";
 import AppearingText from "../../../components/AppearingText.vue";
+import { useGradientSpotlight } from "../../../composables/useGradientSpotlight";
+
+const heroTitleRef = ref(null);
+useGradientSpotlight(heroTitleRef);
 </script>
 
 <template>
@@ -11,7 +16,7 @@ import AppearingText from "../../../components/AppearingText.vue";
     <div class="hero-content grid">
       <div class="hero-content-inner" id="hero-content-inner">
         <div class="hero-content-copys">
-          <h1 class="hero-title">Ajay<br />Guvva</h1>
+          <h1 class="hero-title" ref="heroTitleRef">Ajay<br />Guvva</h1>
           <Banner class="hero-banner" size="lg" :copy="t('job-title')" v-if="!preloaderVisible" animated />
         </div>
       </div>

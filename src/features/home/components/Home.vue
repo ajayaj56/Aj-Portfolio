@@ -110,12 +110,7 @@ const handleProjectsLoaded = () => {
 };
 
 watchEffect((onInvalidate) => {
-  if (
-    projectsLoaded &&
-    threeInitialized &&
-    //(projectId.value === null || isTransitioning.value) &&
-    !preloaderVisible.value
-  ) {
+  if (threeInitialized.value) {
     animations.init();
   }
 

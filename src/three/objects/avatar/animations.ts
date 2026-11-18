@@ -156,14 +156,17 @@ const wave = () => {
   const waveAction = actions.get("wave");
   const hologramWaveAction = hologramActions.get("wave");
   if (!waveAction) return;
-  const tl = gsap.timeline();
+
+  gsap.killTweensOf(wavingStrength);
+  wavingStrength.value = 1;
 
   const waveDuration = waveAction.getClip().duration;
-  waveAction.play();
-  hologramWaveAction?.play();
+  waveAction.reset().play();
+  hologramWaveAction?.reset().play();
 
+  const tl = gsap.timeline();
   tl.add(face.wave());
-  tl.fromTo(wavingStrength, { value: 1 }, { value: 0 }, waveDuration - 0.2);
+  tl.to(wavingStrength, { value: 0, duration: 0.35, ease: "power2.out" }, Math.max(0, waveDuration - 0.35));
 
   return tl;
 };
