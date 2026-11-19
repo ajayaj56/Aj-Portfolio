@@ -35,11 +35,6 @@ const setCardRef = (el: any, index: number) => {
   }
 };
 
-// 1. Website Development: Slide in from the left
-// 2. UI/UX Design: Slide down from the top
-// 3. Logo & Brand Identity: Slide in from the right
-// 4. Poster & Graphic Design: Slide diagonally from the bottom-left corner
-// 5. Excel Data Quality Control: Slide diagonally from the bottom-right corner
 const directions = [
   { x: -90, y: 0 },
   { x: 0, y: -90 },
@@ -78,10 +73,6 @@ const setupCardAnimations = () => {
     const initialX = baseDir.x * multiplier;
     const initialY = baseDir.y * multiplier;
 
-    // Viewport-aware stagger:
-    // Desktop: ripple sequence (0, 0.16s, 0.32s, 0.48s, 0.64s)
-    // Tablet: 2-column stagger (0, 0.16s)
-    // Mobile: triggers directly when card enters view
     let staggerDelay = 0;
     if (isMobile) {
       staggerDelay = 0;
@@ -91,7 +82,6 @@ const setupCardAnimations = () => {
       staggerDelay = index * 0.16;
     }
 
-    // Set initial off-screen state
     gsap.set(cardEl, {
       opacity: 0,
       scale: 0.94,
@@ -136,7 +126,6 @@ const setupCardAnimations = () => {
 
     triggers.push(trigger);
 
-    // If card is already inside viewport on page load/refresh, trigger entrance immediately
     if (ScrollTrigger.isInViewport(cardEl, 0.1)) {
       animateIn();
     }
@@ -176,6 +165,8 @@ onUnmounted(() => {
         <h2 class="projects-title-copy">{{ t("projects") }}</h2>
       </div>
     </div>
+
+    <!-- Classic Grid View -->
     <div class="grid">
       <div class="projects-cards">
         <div
@@ -222,6 +213,9 @@ onUnmounted(() => {
     position: relative;
     padding-top: var(--space-md);
     grid-column: 1 / 13;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 
     @include mixins.mq("md") {
       grid-column: 1 / 13;

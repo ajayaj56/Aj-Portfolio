@@ -7,7 +7,6 @@ export const projectIds = [
   "poster-graphic-design",
   "excel-data-quality-control",
 ];
-//export const projectIds = ["streakon", "cubewar", "quibbo", "sharkie", "pokedex"];
 
 function simplifyModules(glob: Record<string, any>) {
   const result: Record<string, any> = {};
