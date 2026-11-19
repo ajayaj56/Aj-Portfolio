@@ -54,11 +54,39 @@ const performRaycast = () => {
   }
 };
 
+let lastTouchEndTime = 0;
+let lastTapTime = 0;
+let lastTapX = 0;
+let lastTapY = 0;
+
+const handleTouchEnd = (e: TouchEvent) => {
+  if (!e.changedTouches || !e.changedTouches.length) return;
+  const touch = e.changedTouches[0];
+  if (!touch) return;
+  const now = Date.now();
+  const dt = now - lastTapTime;
+  const dx = Math.abs(touch.clientX - lastTapX);
+  const dy = Math.abs(touch.clientY - lastTapY);
+
+  const isDoubleTap = dt > 50 && dt < 480 && dx < 35 && dy < 35;
+  lastTapTime = now;
+  lastTapX = touch.clientX;
+  lastTapY = touch.clientY;
+  lastTouchEndTime = now;
+
+  updatePointer(touch.clientX, touch.clientY);
+  performRaycast();
+  if (!hoveringBox || !hoveringBox.onClick) return;
+  hoveringBox.onClick({ isDoubleTap, isTouch: true, event: e });
+};
+
 const handleClick = (e: MouseEvent) => {
+  if (Date.now() - lastTouchEndTime < 500) return;
+
   updatePointer(e.clientX, e.clientY);
   performRaycast();
   if (!hoveringBox || !hoveringBox.onClick) return;
-  hoveringBox.onClick();
+  hoveringBox.onClick({ isDoubleTap: false, isTouch: false, event: e });
 };
 
 const handleMouseMove = (event: MouseEvent) => {
@@ -95,6 +123,7 @@ const init = () => {
   }
   window.addEventListener("mousemove", handleMouseMove);
   window.addEventListener("click", handleClick);
+  window.addEventListener("touchend", handleTouchEnd, { passive: true });
 };
 
 const destroy = () => {
@@ -103,6 +132,7 @@ const destroy = () => {
   }
   window.removeEventListener("mousemove", handleMouseMove);
   window.removeEventListener("click", handleClick);
+  window.removeEventListener("touchend", handleTouchEnd);
 };
 
 export const raycast = {

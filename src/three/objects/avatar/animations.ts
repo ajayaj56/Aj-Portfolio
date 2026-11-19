@@ -9,6 +9,7 @@ import { sleepingSprite } from "../contact/sleeping-sprite";
 import { playSound } from "../../../features/sounds/utils/sounds";
 import { isFeatureEnabled } from "../../../utils/features";
 import { stopSnoreRepetition } from "../../../features/sounds/core/contact";
+import { room } from "../room";
 
 import type { AnimationClip, Object3D } from "three";
 
@@ -163,6 +164,9 @@ const wave = () => {
   const waveDuration = waveAction.getClip().duration;
   waveAction.reset().play();
   hologramWaveAction?.reset().play();
+
+  // Swivel chair along with the boy
+  room.swivelChairForWave(waveDuration);
 
   const tl = gsap.timeline();
   tl.add(face.wave());

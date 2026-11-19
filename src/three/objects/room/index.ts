@@ -16,6 +16,7 @@ import type { Object3D } from "three";
 
 const group = new Group();
 const chairScrollRotation = new Euler();
+const chairWaveRotation = { y: 0 };
 
 let objects: {
   blackboard: Mesh;
@@ -91,14 +92,40 @@ const tick = () => {
   group.visible = sceneWeights.hero > 0.001;
 
   if (objects?.chair) {
-    objects.chair.rotation.copy(chairScrollRotation);
+    objects.chair.rotation.x = chairScrollRotation.x;
+    objects.chair.rotation.y = chairScrollRotation.y + chairWaveRotation.y;
+    objects.chair.rotation.z = chairScrollRotation.z;
   }
 
   penguin.tick();
   music.tick();
 };
 
+const swivelChairForWave = (waveDuration: number = 2.7) => {
+  gsap.killTweensOf(chairWaveRotation);
+  const tl = gsap.timeline();
+  // Swivel chair slightly with the boy as he turns to wave towards the viewer
+  tl.to(chairWaveRotation, {
+    y: -0.42,
+    duration: 0.45,
+    ease: "power2.out",
+  });
+  // Smoothly swivel chair back to center as the wave finishes
+  const returnStart = Math.max(0.5, waveDuration - 0.7);
+  tl.to(
+    chairWaveRotation,
+    {
+      y: 0,
+      duration: 0.7,
+      ease: "power2.inOut",
+    },
+    returnStart,
+  );
+  return tl;
+};
+
 const destroy = () => {
+  gsap.killTweensOf(chairWaveRotation);
   gsap.ticker.remove(tick);
   shadow.destroy();
   //group.clear();
@@ -110,4 +137,4 @@ const destroy = () => {
   frame.destroy();
 };
 
-export const room = { init, destroy, group, chairScrollRotation };
+export const room = { init, destroy, group, chairScrollRotation, swivelChairForWave };

@@ -17,13 +17,13 @@ import { playSound } from "../../../features/sounds/utils/sounds";
 //import { avatarHologram } from "./hologram";
 
 import type { Material, Bone, Texture } from "three";
-import type { ClickableBox3 } from "../../types";
+import type { ClickableBox3, ClickInfo } from "../../types";
 
 let mesh: Mesh | null = null;
 let rightHandBone: Bone | null = null;
 let clickableBox: ClickableBox3 | null = null;
-const localBoxMin = new Vector3(-1.6, 2.0, -1.7);
-const localBoxMax = new Vector3(1.6, 6.5, 2.7);
+const localBoxMin = new Vector3(-0.65, 0.6, -0.65);
+const localBoxMax = new Vector3(0.65, 3.6, 0.65);
 
 const tIdleIntensity = { value: 0 };
 
@@ -137,13 +137,20 @@ const setupMesh = () => {
   clickableBox = new Box3() as ClickableBox3;
   clickableBox.min.copy(localBoxMin).add(transform.position);
   clickableBox.max.copy(localBoxMax).add(transform.position);
-  clickableBox.onClick = () => {
+
+  clickableBox.onClick = (info?: ClickInfo) => {
     if (sceneWeights.contact > 0.001) {
       if (!animations.getIsAwake()) {
         animations.wakeUp();
       }
       return;
     }
+
+    // Only turn and say hi on mouse click (desktop) OR double tap (touch/mobile)
+    if (info && info.isTouch && !info.isDoubleTap) {
+      return;
+    }
+
     animations.wave();
     playSound("click");
   };
@@ -164,8 +171,8 @@ const tick = () => {
     uniforms.uAmbientStrength.value = 0;
     transform.visible = true;
     if (clickableBox) {
-      clickableBox.min.copy(localBoxMin).add(transform.position);
-      clickableBox.max.copy(localBoxMax).add(transform.position);
+      clickableBox.min.set(-2.0, -13.5, -2.0);
+      clickableBox.max.set(2.0, -10.0, 2.0);
     }
     return;
   }
