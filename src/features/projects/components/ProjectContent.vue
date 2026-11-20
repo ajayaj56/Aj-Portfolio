@@ -6,8 +6,10 @@ import Link from "../../../components/Link.vue";
 import NextProject from "./NextProject.vue";
 import TwistBand, { type TwistBandItem } from "./TwistBand.vue";
 import BendCarousel, { type BendCarouselItem } from "./BendCarousel.vue";
+import ConcaveGlobe, { type ConcaveGlobeItem } from "./ConcaveGlobe.vue";
 import Banner from "../../../components/Banner.vue";
 import { locale } from "../../../i18n/store";
+import { lenis } from "../../../composables/useScroll";
 import { previews } from "../../../content/projects/previews";
 import { projectShowcases } from "../../../content/projects/showcases";
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
@@ -20,7 +22,20 @@ const { content, projectId } = defineProps<{
 }>();
 
 const loadedPreviews = ref<ProjectPreview[] | null>(null);
-const activePreviewItem = ref<TwistBandItem | BendCarouselItem | null>(null);
+const activePreviewItem = ref<TwistBandItem | BendCarouselItem | ConcaveGlobeItem | null>(null);
+const isFullView = ref(false);
+
+const openFullView = () => {
+  isFullView.value = true;
+  document.body.style.overflow = "hidden";
+  if (lenis.value) lenis.value.stop();
+};
+
+const closeFullView = () => {
+  isFullView.value = false;
+  document.body.style.overflow = "";
+  if (lenis.value) lenis.value.start();
+};
 
 const showcase = computed(() => {
   return projectShowcases[projectId] || null;
@@ -43,13 +58,17 @@ const nextProject = computed(() => {
   return previews[nextIndex];
 });
 
-const handleShowcaseSelect = (item: TwistBandItem | BendCarouselItem) => {
+const handleShowcaseSelect = (item: TwistBandItem | BendCarouselItem | ConcaveGlobeItem) => {
   activePreviewItem.value = item;
 };
 
 const handleKeyDown = (e: KeyboardEvent) => {
-  if (e.key === "Escape" && activePreviewItem.value) {
-    activePreviewItem.value = null;
+  if (e.key === "Escape") {
+    if (activePreviewItem.value) {
+      activePreviewItem.value = null;
+    } else if (isFullView.value) {
+      closeFullView();
+    }
   }
 };
 
@@ -62,6 +81,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener("keydown", handleKeyDown);
+  closeFullView();
 });
 </script>
 
@@ -86,12 +106,78 @@ onUnmounted(() => {
         <Banner class="project-showcase-banner" :copy="showcase.banner" size="sm" animated />
         <h2 class="project-showcase-title">{{ showcase.title }}</h2>
         <p class="project-showcase-subtitle">{{ showcase.subtitle }}</p>
+
+        <!-- Explore Full View Button in Header -->
+        <button
+          type="button"
+          class="project-showcase-explore-btn"
+          @click="openFullView"
+          data-cursor="circle-white"
+          data-sound="click"
+          data-hoversound="hover"
+        >
+          <span class="explore-btn-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+            </svg>
+          </span>
+          <span>Explore Full View</span>
+        </button>
       </div>
 
-      <div class="project-showcase-wrapper">
+      <div class="project-showcase-wrapper" :class="{ 'is-fullview': isFullView }">
+        <!-- Full Desktop View Top Navigation Bar -->
+        <div v-if="isFullView" class="showcase-fullview-bar">
+          <button
+            type="button"
+            class="showcase-fullview-back-btn"
+            @click="closeFullView"
+            data-cursor="circle-white"
+            data-sound="click"
+            data-hoversound="hover"
+          >
+            <span class="back-arrow">←</span>
+            <span>Back</span>
+          </button>
+
+          <div class="showcase-fullview-info">
+            <span class="showcase-fullview-badge">{{ showcase.banner || '3D Experience' }}</span>
+            <span class="showcase-fullview-title">{{ showcase.title }}</span>
+          </div>
+
+          <div class="showcase-fullview-hint">
+            <span class="hint-dot"></span>
+            <span>Scroll or drag to explore • ESC to exit</span>
+          </div>
+        </div>
+
+        <!-- Floating Full View Pill (when in normal view) -->
+        <button
+          v-else
+          type="button"
+          class="showcase-wrapper-expand-pill"
+          @click="openFullView"
+          data-cursor="circle-white"
+          data-sound="click"
+          data-hoversound="hover"
+          title="Explore Full View"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+          </svg>
+          <span>Full View</span>
+        </button>
+
+        <!-- 3D Concave Globe Sphere specifically for UI/UX Design Page -->
+        <ConcaveGlobe
+          v-if="projectId === 'ui-ux-design'"
+          :items="showcase.items"
+          @select="handleShowcaseSelect"
+        />
+
         <!-- 3D Curved Bend Carousel specifically for Posters Page with exactly 10 assets -->
         <BendCarousel
-          v-if="projectId === 'poster-graphic-design'"
+          v-else-if="projectId === 'poster-graphic-design'"
           :items="showcase.items"
           @select="handleShowcaseSelect"
         />
@@ -249,12 +335,232 @@ onUnmounted(() => {
     max-width: 620px;
   }
 
+  &-explore-btn {
+    margin-top: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--color-text-400);
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 26px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 8px 24px rgba(45, 42, 36, 0.14);
+
+    .explore-btn-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.25s ease;
+    }
+
+    &:hover {
+      background: var(--color-orange-400);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 12px 30px rgba(255, 132, 0, 0.32);
+
+      .explore-btn-icon {
+        transform: scale(1.15);
+      }
+    }
+
+    &:active {
+      transform: translateY(0) scale(0.98);
+    }
+  }
+
   &-wrapper {
     width: 100%;
     position: relative;
     background-color: #ffffff;
     border-radius: var(--radius-xxl);
     overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+
+    &.is-fullview {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 999998;
+      border-radius: 0 !important;
+      margin: 0 !important;
+      background-color: #ffffff;
+      box-shadow: none !important;
+
+      :deep(.twist-band-wrapper) {
+        width: 100vw !important;
+        height: 100vh !important;
+        min-height: 100vh !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+      }
+
+      :deep(.bend-carousel-container) {
+        width: 100vw !important;
+        height: 100vh !important;
+        min-height: 100vh !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+      }
+
+      :deep(.globe-showcase-container) {
+        width: 100vw !important;
+        height: 100vh !important;
+        min-height: 100vh !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+      }
+    }
+  }
+}
+
+.showcase-wrapper-expand-pill {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 25;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--color-text-400);
+  border: 1px solid rgba(45, 42, 36, 0.12);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+  &:hover {
+    background: #ffffff;
+    border-color: var(--color-orange-400);
+    color: var(--color-orange-400);
+    transform: scale(1.04);
+    box-shadow: 0 6px 20px rgba(255, 132, 0, 0.2);
+  }
+}
+
+.showcase-fullview-bar {
+  position: absolute;
+  top: 24px;
+  left: 28px;
+  right: 28px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+
+  @include mixins.mq("md", "max") {
+    top: 16px;
+    left: 16px;
+    right: 16px;
+  }
+}
+
+.showcase-fullview-back-btn {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  color: var(--color-text-400);
+  border: 1px solid rgba(45, 42, 36, 0.14);
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.12);
+
+  .back-arrow {
+    font-size: 16px;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover {
+    background: var(--color-orange-400);
+    color: #ffffff;
+    border-color: var(--color-orange-400);
+    transform: translateX(-3px);
+    box-shadow: 0 12px 32px rgba(255, 132, 0, 0.35);
+
+    .back-arrow {
+      transform: translateX(-3px);
+    }
+  }
+}
+
+.showcase-fullview-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(45, 42, 36, 0.08);
+  padding: 8px 18px;
+  border-radius: 999px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+
+  @include mixins.mq("md", "max") {
+    display: none;
+  }
+
+  .showcase-fullview-badge {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-orange-400);
+  }
+
+  .showcase-fullview-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text-400);
+  }
+}
+
+.showcase-fullview-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(45, 42, 36, 0.08);
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-300);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+
+  @include mixins.mq("md", "max") {
+    display: none;
+  }
+
+  .hint-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-orange-400);
+    box-shadow: 0 0 8px var(--color-orange-400);
   }
 }
 

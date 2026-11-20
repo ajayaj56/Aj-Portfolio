@@ -593,11 +593,18 @@ function initThree() {
     if (!dragging) updateHover();
   };
 
+  const onWheel = (e: WheelEvent) => {
+    const delta = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+    vel -= delta * 0.0018;
+    idle = Math.sign(vel || -1) * Math.abs(idle);
+  };
+
   el.addEventListener("pointerdown", onPointerDown);
   el.addEventListener("pointermove", onPointerMove);
   el.addEventListener("pointerup", onPointerUp);
   el.addEventListener("pointercancel", onPointerUp);
   el.addEventListener("pointerleave", onPointerLeave);
+  el.addEventListener("wheel", onWheel, { passive: true });
 
   function animate(t: number) {
     if (disposed) return;
@@ -828,6 +835,7 @@ function initThree() {
     el.removeEventListener("pointerup", onPointerUp);
     el.removeEventListener("pointercancel", onPointerUp);
     el.removeEventListener("pointerleave", onPointerLeave);
+    el.removeEventListener("wheel", onWheel);
     geoms.forEach((g) => g.dispose());
     materials.forEach((m) => m.dispose());
     textures.forEach((t) => t.dispose());
