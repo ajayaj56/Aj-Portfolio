@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from "vue";
 import * as THREE from "three";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useRouter } from "../../../composables/useRouter";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export interface TwistBandItem {
   title: string;
@@ -36,8 +40,12 @@ const emit = defineEmits<{
 
 const router = useRouter();
 
+const wrapperRef = ref<HTMLDivElement | null>(null);
+const dotsRef = ref<HTMLDivElement | null>(null);
+const shadowRef = ref<HTMLDivElement | null>(null);
 const mountRef = ref<HTMLDivElement | null>(null);
 const pillRef = ref<HTMLDivElement | null>(null);
+const hintRef = ref<HTMLDivElement | null>(null);
 const activeTitle = ref("");
 
 const TEX_W = 640;
@@ -235,8 +243,21 @@ function initThree() {
   const camera = new THREE.PerspectiveCamera(38, mount.clientWidth / mount.clientHeight, 0.1, 100);
   camera.position.set(0, 0.2, 17);
 
+  const outerGroup = new THREE.Group();
+  scene.add(outerGroup);
+
   const ring = new THREE.Group();
-  scene.add(ring);
+  outerGroup.add(ring);
+
+  const entrance = {
+    scale: 0.55,
+    yOffset: -1.4,
+    spin: Math.PI * 3.4,
+    twistProgress: 0.15,
+    radiusProgress: 0.65,
+    attachProgress: 0, // 0 = unattached open ends, 1 = attached closed ribbon
+  };
+  let isEntering = true;
 
   const SEG = 24;
   const step = (Math.PI * 2) / N;
@@ -249,6 +270,7 @@ function initThree() {
   const cards: {
     mesh: THREE.Mesh;
     base: number;
+    index: number;
     uv0: Float32Array;
     project: TwistBandItem;
   }[] = [];
@@ -312,29 +334,49 @@ function initThree() {
       uv0[j * 2] = p0.getX(j) + 0.5;
       uv0[j * 2 + 1] = p0.getY(j);
     }
-    cards.push({ mesh, base: i * step, uv0, project: proj });
+    cards.push({ mesh, base: i * step, index: i, uv0, project: proj });
   }
 
   function layout(rot: number) {
-    const tw = (props.twist * Math.PI) / 180;
-    cardH = ((2 * Math.PI * props.radius) / N) * 0.9;
-    for (const { mesh, base, uv0 } of cards) {
+    const t = Math.max(0, Math.min(1, entrance.attachProgress));
+    const effectiveRadius = props.radius * entrance.radiusProgress;
+    const tw = ((props.twist * Math.PI) / 180) * entrance.twistProgress;
+
+    // At starting (t = 0), the ends are unattached with a wide ~120-degree gap and 3D flare!
+    // As it flows forward and t -> 1, the trailing end catches up, meets the leading end, and attaches into a ribbon.
+    const openGapRatio = 0.28;
+    const currentStep = step * (1 - openGapRatio * (1 - t));
+    const currentSpan = span * (1 - openGapRatio * (1 - t));
+    cardH = ((2 * Math.PI * effectiveRadius) / N) * 0.9;
+
+    for (const { mesh, index: i, uv0 } of cards) {
+      // w is the normalized position along the ribbon: 0 = head (leading end), 1 = tail (trailing end)
+      const w = N > 1 ? i / (N - 1) : 0;
+
+      // When unattached, the tail flares outward and extends in 3D depth/height like a trailing silk streamer
+      const flareR = 1.0 + (1 - t) * 0.28 * Math.pow(w, 1.4);
+      const cardRadius = effectiveRadius * flareR;
+      const unattachedZ = (1 - t) * (-1.5 * Math.pow(w, 2) + 0.45 * (1 - w));
+      const unattachedY = (1 - t) * (-0.75 * Math.pow(w, 1.5) + 0.35 * Math.sin(Math.PI * w));
+
+      const cardBase = i * currentStep;
       const pos = (mesh.geometry as THREE.BufferGeometry).attributes
         .position as THREE.BufferAttribute;
+
       for (let j = 0; j < pos.count; j++) {
         const u = uv0[j * 2] ?? 0;
         const v = uv0[j * 2 + 1] ?? 0;
-        const phi = base + rot + (u - 0.5) * span;
+        const phi = cardBase + rot + (u - 0.5) * currentSpan;
         const sx = Math.sin(phi);
         const cz = Math.cos(phi);
         const alpha = tw * sx * sx;
-        const wave = props.radius * 0.09 * Math.sin(2 * phi + 0.6);
+        const wave = cardRadius * 0.09 * Math.sin(2 * phi + 0.6);
         const h = v * cardH;
         pos.setXYZ(
           j,
-          props.radius * sx + h * Math.sin(alpha) * sx,
-          wave + h * Math.cos(alpha),
-          props.radius * cz + h * Math.sin(alpha) * cz,
+          cardRadius * sx + h * Math.sin(alpha) * sx,
+          wave + h * Math.cos(alpha) + unattachedY,
+          cardRadius * cz + h * Math.sin(alpha) * cz + unattachedZ,
         );
       }
       pos.needsUpdate = true;
@@ -572,20 +614,214 @@ function initThree() {
     ring.rotation.x = baseTilt + tiltOffset + Math.sin(t * 0.0004) * 0.03;
     ring.rotation.z = Math.sin(t * 0.0003) * 0.03;
 
-    layout(rot);
-    recenter(false);
+    outerGroup.scale.setScalar(entrance.scale);
+    outerGroup.position.y = entrance.yOffset;
+
+    layout(rot + entrance.spin);
+    if (!isEntering) {
+      recenter(false);
+    }
     renderer?.render(scene, camera);
   }
 
+  // Pre-calibrate camera FOV and centered ring position at full attached scale
+  const savedRadiusProgress = entrance.radiusProgress;
+  const savedTwistProgress = entrance.twistProgress;
+  const savedAttachProgress = entrance.attachProgress;
+  entrance.radiusProgress = 1;
+  entrance.twistProgress = 1;
+  entrance.attachProgress = 1;
   for (let i = 0; i < 6; i++) {
     layout(0);
     recenter(true);
   }
+  entrance.radiusProgress = savedRadiusProgress;
+  entrance.twistProgress = savedTwistProgress;
+  entrance.attachProgress = savedAttachProgress;
+
+  // Initial hidden state for elements before entrance
+  if (mountRef.value) gsap.set(mountRef.value, { opacity: 0 });
+  if (shadowRef.value) gsap.set(shadowRef.value, { opacity: 0, scale: 0.35 });
+  if (dotsRef.value) gsap.set(dotsRef.value, { opacity: 0 });
+  if (hintRef.value) gsap.set(hintRef.value, { opacity: 0, y: 14 });
+
+  let entranceTriggered = false;
+  let entranceTl: gsap.core.Timeline | null = null;
+  let scrollTriggerInstance: ScrollTrigger | null = null;
+  let observerInstance: IntersectionObserver | null = null;
+
+  const playEntrance = () => {
+    if (entranceTriggered || disposed) return;
+    entranceTriggered = true;
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) {
+      entrance.scale = 1;
+      entrance.yOffset = 0;
+      entrance.spin = 0;
+      entrance.twistProgress = 1;
+      entrance.radiusProgress = 1;
+      entrance.attachProgress = 1;
+      isEntering = false;
+      if (mountRef.value) gsap.set(mountRef.value, { opacity: 1 });
+      if (shadowRef.value) gsap.set(shadowRef.value, { opacity: 1, scale: 1 });
+      if (dotsRef.value) gsap.set(dotsRef.value, { opacity: 0.12 });
+      if (hintRef.value) gsap.set(hintRef.value, { opacity: 1, y: 0 });
+      return;
+    }
+
+    entranceTl = gsap.timeline({
+      onComplete: () => {
+        isEntering = false;
+      },
+    });
+
+    // 1. Mount container fade in
+    if (mountRef.value) {
+      entranceTl.fromTo(
+        mountRef.value,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.6, ease: "power2.out" },
+        0,
+      );
+    }
+
+    // 2. 3D Ribbon scale blooms outwards
+    entranceTl.to(
+      entrance,
+      {
+        scale: 1,
+        duration: 1.8,
+        ease: "power2.out",
+      },
+      0,
+    );
+
+    // 3. 3D Ribbon rises up gracefully
+    entranceTl.to(
+      entrance,
+      {
+        yOffset: 0,
+        duration: 1.6,
+        ease: "power3.out",
+      },
+      0,
+    );
+
+    // 4. Radius expands to full dimension
+    entranceTl.to(
+      entrance,
+      {
+        radiusProgress: 1,
+        duration: 1.7,
+        ease: "power2.out",
+      },
+      0,
+    );
+
+    // 5. Helical Mobius twist unfolds dynamically
+    entranceTl.to(
+      entrance,
+      {
+        twistProgress: 1,
+        duration: 1.9,
+        ease: "power2.inOut",
+      },
+      0.08,
+    );
+
+    // 6. Fast flowing spin: the open ribbon flows forward along the 3D curve
+    entranceTl.to(
+      entrance,
+      {
+        spin: 0,
+        duration: 2.2,
+        ease: "power3.out",
+      },
+      0,
+    );
+
+    // 7. Ribbon Flow & Attach Animation:
+    // Starts completely unattached with ends detached and a wide open gap.
+    // As it flows forward in 3D, the trailing end catches up, meets the leading end, and attaches to form the ribbon!
+    entranceTl.to(
+      entrance,
+      {
+        attachProgress: 1,
+        duration: 2.0,
+        ease: "power2.inOut",
+      },
+      0.1,
+    );
+
+    // 8. Ambient depth shadow beneath the 3D band
+    if (shadowRef.value) {
+      entranceTl.fromTo(
+        shadowRef.value,
+        { opacity: 0, scale: 0.35 },
+        { opacity: 1, scale: 1, duration: 1.6, ease: "power2.out" },
+        0.1,
+      );
+    }
+
+    // 9. Subtle dotted grid background
+    if (dotsRef.value) {
+      entranceTl.fromTo(
+        dotsRef.value,
+        { opacity: 0 },
+        { opacity: 0.12, duration: 1.2, ease: "power1.out" },
+        0.2,
+      );
+    }
+
+    // 10. Hint badge slides up once ends have attached
+    if (hintRef.value) {
+      entranceTl.fromTo(
+        hintRef.value,
+        { opacity: 0, y: 14 },
+        { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" },
+        1.3,
+      );
+    }
+  };
+
+  const wrapperEl = wrapperRef.value;
+  if (wrapperEl) {
+    scrollTriggerInstance = ScrollTrigger.create({
+      trigger: wrapperEl,
+      start: "top 88%",
+      once: true,
+      onEnter: () => playEntrance(),
+    });
+
+    if (typeof IntersectionObserver !== "undefined") {
+      observerInstance = new IntersectionObserver(
+        (entries) => {
+          if (entries[0]?.isIntersecting) {
+            observerInstance?.disconnect();
+            playEntrance();
+          }
+        },
+        { threshold: 0.08 },
+      );
+      observerInstance.observe(wrapperEl);
+    }
+
+    if (ScrollTrigger.isInViewport(wrapperEl, 0.08)) {
+      playEntrance();
+    }
+  } else {
+    playEntrance();
+  }
+
   rafId = requestAnimationFrame(animate);
 
   return () => {
     disposed = true;
     cancelAnimationFrame(rafId);
+    entranceTl?.kill();
+    scrollTriggerInstance?.kill();
+    observerInstance?.disconnect();
     resizeObserver?.disconnect();
     el.removeEventListener("pointerdown", onPointerDown);
     el.removeEventListener("pointermove", onPointerMove);
@@ -624,15 +860,15 @@ watch(
 </script>
 
 <template>
-  <div class="twist-band-wrapper">
-    <div class="twist-band-dots" aria-hidden="true"></div>
-    <div class="twist-band-shadow" aria-hidden="true"></div>
+  <div ref="wrapperRef" class="twist-band-wrapper">
+    <div ref="dotsRef" class="twist-band-dots" aria-hidden="true"></div>
+    <div ref="shadowRef" class="twist-band-shadow" aria-hidden="true"></div>
     <div ref="mountRef" class="twist-band-mount"></div>
     <div v-if="!props.hideLabels" ref="pillRef" class="twist-band-pill">
       <span>{{ activeTitle }}</span>
       <span class="pill-arrow">↗</span>
     </div>
-    <div class="twist-band-hint">
+    <div ref="hintRef" class="twist-band-hint">
       <span class="hint-dot"></span>
       Drag to spin showcase
       <span class="hint-dot"></span>

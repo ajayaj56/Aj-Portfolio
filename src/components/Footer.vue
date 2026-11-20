@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TwistRibbon from "./TwistRibbon.vue";
 import Social from "./Social.vue";
 import Clickable from "./Clickable.vue";
 import NotchSection from "./NotchSection.vue";
@@ -26,6 +27,7 @@ const showAttribution = import.meta.env.VITE_SHOW_ATTRIBUTION !== "false";
 <template>
   <footer class="footer">
     <NotchSection class="footer-notch" />
+    <TwistRibbon />
     <div class="footer-content">
       <div
         class="footer-back-to-top"
@@ -82,7 +84,8 @@ const showAttribution = import.meta.env.VITE_SHOW_ATTRIBUTION !== "false";
   background: var(--color-background-300, var(--color-beige-400));
   width: 100%;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   position: relative;
 
   &-content {
